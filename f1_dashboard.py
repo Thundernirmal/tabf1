@@ -666,7 +666,7 @@ class MessageScreen(ModalScreen[None]):
 
     def on_key(self, event):
         if getattr(event, "key", None) in ("escape", "enter"):
-            self.app.pop_screen()
+            self.dismiss()
 
 
 class RaceDetailScreen(ModalScreen[None]):
@@ -732,7 +732,12 @@ class RaceDetailScreen(ModalScreen[None]):
 
     def on_key(self, event):  # close on ESC/Enter
         if getattr(event, "key", None) in ("escape", "enter"):
-            self.app.pop_screen()
+            self.dismiss()
+            # Prevent ESC/Enter from bubbling to underlying screens
+            try:
+                event.stop()
+            except Exception:
+                pass
 
 
 class DriverDetailScreen(ModalScreen[None]):
@@ -822,7 +827,7 @@ class DriverDetailScreen(ModalScreen[None]):
 
     def on_key(self, event):  # close on ESC/Enter
         if getattr(event, "key", None) in ("escape", "enter"):
-            self.app.pop_screen()
+            self.dismiss()
 
 
 class ConstructorDetailScreen(ModalScreen[None]):
@@ -906,7 +911,7 @@ class ConstructorDetailScreen(ModalScreen[None]):
 
     def on_key(self, event):
         if getattr(event, "key", None) in ("escape", "enter"):
-            self.app.pop_screen()
+            self.dismiss()
 
 
 if __name__ == "__main__":
