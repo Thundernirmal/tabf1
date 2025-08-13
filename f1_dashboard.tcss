@@ -13,6 +13,7 @@ Screen {
     padding: 0 0 0 0;
     margin: 1 0 0 0;
     color: #7AA2F7; /* blue */
+    text-style: bold;
 }
 
 #season {
@@ -48,6 +49,8 @@ Footer {
     padding: 1 1;
     margin: 0 1;
     overflow: hidden;
+    border-title-align: center;
+    border-subtitle-align: center;
 }
 
 #drivers-panel {
@@ -83,4 +86,29 @@ DataTable > .datatable--fixed {
 
 DataTable > .datatable--hover {
     background: #414868; /* brightBlack */
+}
+
+/* Details modal styling */
+#detail-wrapper {
+    width: 90%;
+    height: 90%;
+    background: #1A1B26;
+    border: round #7AA2F7;
+    padding: 1 2;
+    align: center middle;         /* center the modal itself */
+    content-align: center top;    /* center title; table flows below */
+}
+
+#detail-title {
+    color: #C0CAF5;
+    margin: 0 0 1 0;
+    text-style: bold;
+    width: 100%;
+    content-align: center middle;
+}
+
+#detail-table {
+    height: 1fr;
+    width: 100%;
+    background: #1A1B26;
 }
