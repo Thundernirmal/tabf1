@@ -1,7 +1,7 @@
 /* Tokyo Night theme (exact palette) */
 
 Screen {
-    background: #1A1B26; /* background */
+    background: transparent; /* background */
     color: #C0CAF5;      /* foreground */
 }
 #title, #season {
@@ -22,13 +22,13 @@ Screen {
 }
 
 Header {
-    background: #15161E; /* black */
+    background: transparent; /* black */
     color: #C0CAF5;
     text-style: bold;
 }
 
 Footer {
-    background: #15161E; /* black */
+    background: transparent; /* black */
     color: #A9B1D6;
     height: 3;
 }
@@ -38,12 +38,12 @@ Footer {
     width: 100%;
     layout: horizontal;
     padding: 1 2;
-    background: #1A1B26; /* ensure no default black shows */
+    background: transparent; /* ensure no default black shows */
 }
 
 #drivers-panel, #constructors-panel {
     border: round #7AA2F7; /* blue */
-    background: #15161E;   /* black */
+    background: transparent;   /* black */
     width: 1fr;
     height: 1fr;
     padding: 1 1;
@@ -64,14 +64,14 @@ Footer {
 DataTable {
     height: 1fr;
     width: 100%;
-    background: #1A1B26;
+    background: transparent;
     color: #C0CAF5;
     border: none;
     overflow: hidden;
 }
 
 DataTable > .datatable--header {
-    background: #15161E;
+    background: transparent;
     color: #A9B1D6;
     text-style: bold;
 }
@@ -80,23 +80,32 @@ DataTable > .datatable--cursor {
     background: #33467C; /* selectionBackground */
 }
 
+DataTable > .datatable--row {
+    background: #1A1B26; /* row background */
+    color: #C0CAF5; /* row text color */
+}
+
+DataTable > .datatable--row:hover {
+    background: #414868; /* hover background */
+}
+
 DataTable > .datatable--fixed {
-    background: #15161E;
+    background: transparent;
 }
 
 DataTable > .datatable--hover {
-    background: #414868; /* brightBlack */
+    background: transparent; /* brightBlack */
 }
 
 /* Details modal styling */
 #detail-wrapper {
     width: 90%;
-    height: 90%;
-    background: #1A1B26;
+    height: auto;
+    background: transparent;
     border: round #7AA2F7;
     padding: 1 2;
-    align: center middle;         /* center the modal itself */
-    content-align: center top;    /* center title; table flows below */
+    align: center middle;
+    content-align: center top;
 }
 
 #detail-title {
@@ -108,7 +117,9 @@ DataTable > .datatable--hover {
 }
 
 #detail-table {
-    height: 1fr;
+    height: auto;
     width: 100%;
-    background: #1A1B26;
+    background: transparent;
+    align: center middle;
+    content-align: center top;
 }
