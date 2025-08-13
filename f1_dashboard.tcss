@@ -2,7 +2,6 @@
 
 Screen {
     background: transparent; /* background */
-    color: #C0CAF5;      /* foreground */
 }
 #title, #season {
     width: 100%;
