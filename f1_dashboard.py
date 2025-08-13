@@ -251,17 +251,19 @@ class F1DashboardApp(App):
 
     def on_data_table_row_selected(self, event) -> None:
         """Open details when a row is selected (mouse or Enter inside table)."""
-        # Determine which table triggered the event and open the right details
+        # Only handle events from main app tables, not modal screens
         try:
             table = event.sender  # type: ignore[attr-defined]
             if isinstance(table, DataTable):
-                if table.id and table.id.startswith("drivers-panel") or table is self.query_one("#drivers-panel DataTable", DataTable):
-                    self.action_open_details()
-                elif table.id and table.id.startswith("constructors-panel") or table is self.query_one("#constructors-panel DataTable", DataTable):
-                    self.action_open_details()
+                # Check if we're in the main app (not a modal screen)
+                if hasattr(self, '_drivers_data') and hasattr(self, '_constructors_data'):
+                    if table.id and table.id.startswith("drivers-panel"):
+                        self.action_open_details()
+                    elif table.id and table.id.startswith("constructors-panel"):
+                        self.action_open_details()
         except Exception:
-            # Fallback to open based on current focus
-            self.action_open_details()
+            # Ignore errors to prevent recursion
+            pass
 
     @staticmethod
     def _truncate(text, width):
@@ -423,7 +425,15 @@ class RaceScreen(ModalScreen[None]):
 
     def on_data_table_row_selected(self, event) -> None:
         """Open race details when a row is selected in the race table."""
-        self.action_open_race_details()
+        # Only handle events from race tables in this screen
+        try:
+            table = event.sender  # type: ignore[attr-defined]
+            if isinstance(table, DataTable) and table.id and table.id.startswith("race-panel"):
+                self.action_open_race_details()
+                event.prevent_default()  # Prevent event bubbling
+        except Exception:
+            # Ignore errors to prevent issues
+            pass
 
     def load_race_data(self, force=False) -> None:
         r_panel = self.query_one("#race-panel", RacePanel)
