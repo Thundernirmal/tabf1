@@ -6,9 +6,17 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, DataTable
 from textual.events import Resize
+from textual.widgets import Static
 
 CACHE_FILE = "f1_cache.json"
 API_BASE = "http://api.jolpi.ca"
+
+# Minimal, elegant banner for TabF1
+ASCII_ART = (
+    "┌─────── TabF1 ──────┐\n"
+    "│  F1 Standings TUI  │\n"
+    "└────────────────────┘"
+)
 
 
 def get_cache():
@@ -88,7 +96,10 @@ class F1DashboardApp(App):
         self._constructors_data = []
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
+    # Title and season header (compact)
+        yield Static(ASCII_ART, id="title")
+        yield Static(f"Season {get_current_year()}", id="season")
+            # Main standings panels
         yield Horizontal(
             StandingsPanel("drivers-panel", "Drivers Standings"),
             StandingsPanel("constructors-panel", "Constructors Standings"),

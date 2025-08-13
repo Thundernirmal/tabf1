@@ -4,6 +4,21 @@ Screen {
     background: #0e1116;
     color: #e6edf3;
 }
+#title, #season {
+    width: 100%;
+    content-align: center middle;
+}
+
+#title {
+    padding: 0 0 0 0;
+    margin: 1 0 0 0;
+    color: #93c5fd;
+}
+
+#season {
+    margin: 0 0 1 0;
+    color: #9db7cc;
+}
 
 Header {
     background: #111824;
