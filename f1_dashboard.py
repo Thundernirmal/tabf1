@@ -89,7 +89,54 @@ def get_constructor_standings(force=False):
     return []
 
 
+def get_latest_race(force=False):
+    """Get the latest race information."""
+    year = get_current_year()
+    data = fetch_with_cache(f"/ergast/f1/{year}/last/results.json", f"latest_race_{year}", force=force)
+    races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+    if races:
+        return races[0]
+    return {}
+
+
+def get_race_results(season, round_no, force=False):
+    """Get detailed race results for a specific race."""
+    data = fetch_with_cache(
+        f"/ergast/f1/{season}/{round_no}/results.json", 
+        f"race_results_{season}_{round_no}", 
+        force=force
+    )
+    races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+    if races and "Results" in races[0]:
+        return races[0]["Results"]
+    return []
+
+
+def get_season_driver_standings_progression(season, force=False):
+    """Get driver standings progression throughout the season for visualization."""
+    data = fetch_with_cache(
+        f"/ergast/f1/{season}/driverStandings.json",
+        f"season_progression_{season}",
+        expire_minutes=1440,
+        force=force
+    )
+    standings_lists = data.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+    return standings_lists
+
+
 class StandingsPanel(Vertical):
+    def __init__(self, panel_id, title):
+        super().__init__(id=panel_id)
+        self.title_text = title
+        self.table = None
+
+    def compose(self) -> ComposeResult:
+        table = DataTable(id=f"{self.id}-table")
+        self.table = table
+        yield table
+
+
+class RacePanel(Vertical):
     def __init__(self, panel_id, title):
         super().__init__(id=panel_id)
         self.title_text = title
@@ -105,9 +152,10 @@ class F1DashboardApp(App):
     CSS_PATH = "f1_dashboard.tcss"
     BINDINGS = [
         ("q", "quit", "Quit"),
-        ("r", "refresh", "Refresh"),
+        ("f", "refresh", "Refresh"),
         ("left", "focus_left", "Focus Drivers"),
         ("right", "focus_right", "Focus Constructors"),
+        ("r", "open_race_screen", "Race Results"),
         ("enter", "open_details", "Open Details"),
         ("o", "open_details", "Open Details"),
         ("escape", "dismiss", "Close Details"),
@@ -169,6 +217,10 @@ class F1DashboardApp(App):
 
     def action_focus_right(self) -> None:
         self.query_one("#constructors-panel DataTable", DataTable).focus()
+
+    def action_open_race_screen(self) -> None:
+        """Open the dedicated race screen."""
+        self.push_screen(RaceScreen())
 
     def action_open_details(self) -> None:
         """Open a modal with details for the selected row in the focused table."""
@@ -310,6 +362,181 @@ class F1DashboardApp(App):
 
 # ----- Details helpers & screens -----
 
+class RaceScreen(ModalScreen[None]):
+    """Dedicated screen showing all races from current season."""
+    BINDINGS = [
+        ("q", "app.pop_screen", "Back to Main"),
+        ("escape", "app.pop_screen", "Back to Main"),
+        ("f", "refresh", "Refresh"),
+        ("enter", "open_race_details", "Race Details"),
+        ("o", "open_race_details", "Race Details"),
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self._all_races = []
+
+    def compose(self) -> ComposeResult:
+        yield Static("┌─────── F1 Race Results ──────┐\n│     All Races This Season    │\n└──────────────────────────────┘", id="title")
+        yield Static(f"Season {get_current_year()}", id="season")
+        yield RacePanel("race-panel", "All Season Races")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        year = get_current_year()
+        r_panel = self.query_one("#race-panel", RacePanel)
+        r_panel.styles.border_title = f"All Races — {year}"
+        rtab = r_panel.table
+        assert rtab
+        rtab.cursor_type = "row"
+        rtab.add_columns("Grand Prix (Country)", "Date", "Winner", "Team", "Laps", "Race Time")
+        self.load_race_data()
+        self.call_after_refresh(self.render_race_table)
+
+    def action_refresh(self) -> None:
+        self.load_race_data(force=True)
+
+    def action_open_race_details(self) -> None:
+        """Open detailed race results for selected race."""
+        rtab = self.query_one("#race-panel", RacePanel).table
+        if rtab and rtab.cursor_row is not None:
+            race_idx = rtab.cursor_row
+            if 0 <= race_idx < len(self._all_races):
+                selected_race = self._all_races[race_idx]
+                status = selected_race.get("Status", "scheduled")
+                
+                # Check if race has results
+                if selected_race.get("Results") and status == "completed":
+                    self.app.push_screen(RaceDetailScreen(selected_race))
+                elif status == "completed_no_results":
+                    # Show a message for completed races without data
+                    race_name = selected_race.get("raceName", "Race")
+                    date = selected_race.get("date", "")
+                    message = f"🏁 {race_name}\n\nRace completed on {date}\nResults data not available in API\n(This may be due to data source limitations)"
+                    self.app.push_screen(MessageScreen(message))
+                else:
+                    # Show a message for future races
+                    race_name = selected_race.get("raceName", "Race")
+                    date = selected_race.get("date", "")
+                    message = f"🏁 {race_name}\n\nRace scheduled for {date}\nResults not available yet"
+                    self.app.push_screen(MessageScreen(message))
+
+    def on_data_table_row_selected(self, event) -> None:
+        """Open race details when a row is selected in the race table."""
+        self.action_open_race_details()
+
+    def load_race_data(self, force=False) -> None:
+        r_panel = self.query_one("#race-panel", RacePanel)
+        r_panel.styles.border_subtitle = "Loading…"
+        self.refresh()
+        try:
+            year = get_current_year()
+            self._all_races = get_all_races_season(year, force=force)
+            r_panel.styles.border_subtitle = f"{len(self._all_races)} races in {year}"
+        except Exception as e:
+            r_panel.styles.border_subtitle = f"Error: {e}"
+        finally:
+            self.call_after_refresh(self.render_race_table)
+            self.refresh()
+
+    def render_race_table(self) -> None:
+        r_panel = self.query_one("#race-panel", RacePanel)
+        rtab = r_panel.table
+        assert rtab
+
+        # Width budget based on panel size
+        r_width = max(80, r_panel.size.width - 4)
+        
+        # Race table columns: Date(12), Laps(5), Race Time(12) are fixed; Grand Prix/Winner/Team share remainder
+        fixed_r = 12 + 5 + 12
+        flex_r = max(0, r_width - fixed_r)
+        gp_w = max(25, int(flex_r * 0.4))
+        winner_w = max(18, int(flex_r * 0.35))
+        team_w = max(15, flex_r - gp_w - winner_w)
+
+        try:
+            # Race table: [0]=Grand Prix, [1]=Date, [2]=Winner, [3]=Team, [4]=Laps, [5]=Race Time
+            rtab.set_column_width(0, gp_w)
+            rtab.set_column_width(1, 12)
+            rtab.set_column_width(2, winner_w)
+            rtab.set_column_width(3, team_w)
+            rtab.set_column_width(4, 5)
+            rtab.set_column_width(5, 12)
+        except Exception:
+            pass
+
+        # Populate race table with all season races
+        rtab.clear()
+        for race in self._all_races:
+            # Grand Prix name and country
+            race_name = race.get("raceName", "")
+            circuit = race.get("Circuit", {})
+            country = circuit.get("Location", {}).get("country", "")
+            grand_prix = f"{race_name}"
+            if country:
+                grand_prix += f" ({country})"
+            
+            # Date - format as "Mar 16, 2025"
+            date = race.get("date", "")
+            formatted_date = ""
+            if date:
+                try:
+                    date_obj = datetime.strptime(date, "%Y-%m-%d")
+                    formatted_date = date_obj.strftime("%b %d, %Y")
+                except:
+                    formatted_date = date
+            
+            # Get race results and status
+            results = race.get("Results", [])
+            status = race.get("Status", "scheduled")
+            winner_name = ""
+            winner_team = ""
+            total_laps = ""
+            race_time = ""
+            
+            if results and status == "completed":
+                # Race has been completed with results
+                winner = results[0]  # First position is winner
+                driver = winner.get("Driver", {})
+                winner_name = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
+                winner_team = winner.get("Constructor", {}).get("name", "")
+                total_laps = str(winner.get("laps", ""))
+                
+                # Race time
+                time_info = winner.get("Time", {})
+                if time_info:
+                    race_time = time_info.get("time", "")
+            elif status == "completed_no_results":
+                # Race should be completed but no results available
+                winner_name = "No Data"
+                winner_team = "No Data"
+                total_laps = "No Data"
+                race_time = "No Data"
+            else:
+                # Race is scheduled but not completed yet
+                winner_name = "TBD"
+                winner_team = "TBD"
+                total_laps = "TBD"
+                race_time = "TBD"
+            
+            rtab.add_row(
+                self._truncate(grand_prix, gp_w),
+                self._truncate(formatted_date, 12),
+                self._truncate(winner_name, winner_w),
+                self._truncate(winner_team, team_w),
+                self._truncate(total_laps, 5),
+                self._truncate(race_time, 12),
+            )
+
+    @staticmethod
+    def _truncate(text, width):
+        if width <= 0:
+            return ""
+        if len(text) <= width:
+            return text
+        return text[: max(0, width - 1)] + "…"
+
+
 def get_driver_last_results(driver_id: str, limit: int = 10):
     """Fetch most recent race results for a driver (newest 10)."""
     # Step 1: get total results
@@ -346,6 +573,156 @@ def get_constructor_last_results(constructor_id: str, limit: int = 10):
     endpoint = f"/ergast/f1/constructors/{constructor_id}/results.json?limit={limit}&offset={start}"
     data = fetch_with_cache(endpoint, f"constructor_last_{constructor_id}_{limit}_{start}", expire_minutes=1440)
     return data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+
+
+def get_all_races_season(season, force=False):
+    """Get all races for a season, fetching individual race results for accurate data."""
+    from datetime import datetime, date
+    
+    # First get all scheduled races
+    schedule_data = fetch_with_cache(
+        f"/ergast/f1/{season}.json?limit=100",
+        f"race_schedule_{season}",
+        expire_minutes=1440,
+        force=force
+    )
+    scheduled_races = schedule_data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+    
+    # Get today's date for comparison
+    today = date.today()
+    
+    # For each race, fetch individual results if race should be completed
+    all_races = []
+    for race in scheduled_races:
+        round_num = race.get("round")
+        race_date_str = race.get("date", "")
+        
+        # Parse race date
+        race_date = None
+        if race_date_str:
+            try:
+                race_date = datetime.strptime(race_date_str, "%Y-%m-%d").date()
+            except:
+                pass
+        
+        race_copy = race.copy()
+        
+        # Check if race should be completed and fetch individual results
+        if race_date and race_date <= today:
+            # Try to fetch individual race results
+            try:
+                individual_race_data = fetch_with_cache(
+                    f"/ergast/f1/{season}/{round_num}/results.json",
+                    f"race_results_{season}_{round_num}",
+                    expire_minutes=60,  # Shorter cache for results
+                    force=force
+                )
+                individual_races = individual_race_data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                
+                if individual_races and individual_races[0].get("Results"):
+                    # Race has results available
+                    race_copy["Results"] = individual_races[0]["Results"]
+                    race_copy["Status"] = "completed"
+                else:
+                    # Race should be completed but no results available
+                    race_copy["Results"] = []
+                    race_copy["Status"] = "completed_no_results"
+            except Exception:
+                # Error fetching results, treat as no results available
+                race_copy["Results"] = []
+                race_copy["Status"] = "completed_no_results"
+        else:
+            # Future race
+            race_copy["Results"] = []
+            race_copy["Status"] = "scheduled"
+        
+        all_races.append(race_copy)
+    
+    return all_races
+
+
+class MessageScreen(ModalScreen[None]):
+    """Simple message screen for displaying information."""
+    def __init__(self, message: str):
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Static(self.message, id="message-content"),
+            Static("\nPress ESC or Enter to close", id="message-help"),
+            id="message-wrapper"
+        )
+
+    def on_key(self, event):
+        if getattr(event, "key", None) in ("escape", "enter"):
+            self.app.pop_screen()
+
+
+class RaceDetailScreen(ModalScreen[None]):
+    def __init__(self, race_data: dict):
+        super().__init__()
+        self.race = race_data
+        self.table: DataTable | None = None
+        self._spinner_idx = 0
+        self._spinner_timer = None
+
+    def compose(self) -> ComposeResult:
+        race_name = self.race.get("raceName", "Race")
+        circuit = self.race.get("Circuit", {})
+        circuit_name = circuit.get("circuitName", "")
+        country = circuit.get("Location", {}).get("country", "")
+        date = self.race.get("date", "")
+        
+        title = f"🏁 {race_name}"
+        if circuit_name:
+            title += f" — {circuit_name}"
+        if country:
+            title += f" ({country})"
+        if date:
+            title += f" • {date}"
+        
+        header = Static(title, id="detail-title")
+        table = DataTable(id="detail-table")
+        self.table = table
+        table.add_columns("Pos", "Driver", "Team", "Grid", "Time/Status", "Pts")
+        yield Vertical(header, table, id="detail-wrapper")
+
+    def on_mount(self) -> None:
+        # Show the race results immediately since we already have the data
+        if self.table:
+            race_results = self.race.get("Results", [])
+            for result in race_results:
+                pos = str(result.get("position", ""))
+                driver = result.get("Driver", {})
+                name = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
+                team = result.get("Constructor", {}).get("name", "")
+                grid = str(result.get("grid", ""))
+                
+                # Handle time or status
+                time_info = result.get("Time", {})
+                if time_info:
+                    time_str = time_info.get("time", "")
+                else:
+                    time_str = result.get("status", "")
+                
+                pts = str(result.get("points", ""))
+                self.table.add_row(pos, name, team, grid, time_str, pts)
+            
+            try:
+                # Set column widths for race results
+                self.table.set_column_width(0, 3)   # Pos
+                self.table.set_column_width(1, 20)  # Driver
+                self.table.set_column_width(2, 15)  # Team
+                self.table.set_column_width(3, 4)   # Grid
+                self.table.set_column_width(4, 15)  # Time/Status
+                self.table.set_column_width(5, 4)   # Pts
+            except Exception:
+                pass
+
+    def on_key(self, event):  # close on ESC/Enter
+        if getattr(event, "key", None) in ("escape", "enter"):
+            self.app.pop_screen()
 
 
 class DriverDetailScreen(ModalScreen[None]):
