@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from textual.app import App, ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Horizontal, Vertical
@@ -52,11 +52,32 @@ def fetch_with_cache(endpoint, key, expire_minutes=1440, force=False):
     if not force and key in cache:
         try:
             cached = cache[key]
+            data0 = cached.get("data")
+            # Calendar-aware caching: for season schedule, skip expiration on non-race days
+            if key.startswith("race_schedule_"):
+                races = data0.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                today_iso = date.today().isoformat()
+                # If today is not one of the scheduled race dates, return cached without refreshing
+                if not any(r.get("date") == today_iso for r in races if r.get("date")):
+                    return data0
+            # Only refresh individual race results on actual race days
+            if key.startswith("race_results_") and data0:
+                # Parse season from cache key: race_results_{season}_{round}
+                parts = key.split("_")
+                if len(parts) >= 3:
+                    season = parts[2]
+                    sched_key = f"race_schedule_{season}"
+                    sched = cache.get(sched_key, {}).get("data", {}).get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                    today_iso = date.today().isoformat()
+                    # If today is not a scheduled race date, return cached results
+                    if sched and today_iso not in [r.get("date") for r in sched if r.get("date")]:
+                        return data0
+            # Standard expiration check
             cached_time = datetime.fromisoformat(cached.get("time", now))
             if (datetime.fromisoformat(now) - cached_time) < timedelta(minutes=expire_minutes):
-                return cached.get("data")
+                return data0
         except Exception:
-            # Treat invalid timestamps/data as expired
+            # Treat invalid timestamps/data as expired or bypassed
             pass
     url = f"{API_BASE}{endpoint}"
     resp = requests.get(url, timeout=8)
