@@ -96,10 +96,10 @@ class F1DashboardApp(App):
         self._constructors_data = []
 
     def compose(self) -> ComposeResult:
-    # Title and season header (compact)
+        # Title and season header (compact)
         yield Static(ASCII_ART, id="title")
         yield Static(f"Season {get_current_year()}", id="season")
-            # Main standings panels
+        # Main standings panels
         yield Horizontal(
             StandingsPanel("drivers-panel", "Drivers Standings"),
             StandingsPanel("constructors-panel", "Constructors Standings"),
@@ -107,13 +107,17 @@ class F1DashboardApp(App):
         )
         yield Footer()
 
+    def on_ready(self) -> None:  # type: ignore[override]
+        # Ensure initial sizing happens after the first real layout pass
+        # so that panel sizes are non-zero even before a manual resize.
+        self.call_after_refresh(self.render_tables)
+
     def on_mount(self) -> None:
         year = get_current_year()
         d_panel = self.query_one("#drivers-panel", StandingsPanel)
         c_panel = self.query_one("#constructors-panel", StandingsPanel)
         d_panel.styles.border_title = f"Drivers — {year}"
         c_panel.styles.border_title = f"Constructors — {year}"
-
         dtab = d_panel.table
         ctab = c_panel.table
         assert dtab and ctab
@@ -123,6 +127,8 @@ class F1DashboardApp(App):
         ctab.add_columns("Pos", "Constructor", "Pts", "Wins")
         # Start loading data immediately without blocking UI
         self.load_data()
+        # Also schedule a post-refresh sizing to handle first render.
+        self.call_after_refresh(self.render_tables)
 
     def on_resize(self, event: Resize) -> None:  # type: ignore[override]
         try:
@@ -166,7 +172,8 @@ class F1DashboardApp(App):
             d_panel.styles.border_subtitle = msg
             c_panel.styles.border_subtitle = msg
         finally:
-            self.render_tables()
+            # Defer render to the next refresh so sizes are accurate.
+            self.call_after_refresh(self.render_tables)
             self.refresh()
 
     def render_tables(self) -> None:
@@ -176,31 +183,38 @@ class F1DashboardApp(App):
         ctab = c_panel.table
         assert dtab and ctab
 
-        # Width budgets
+        # Width budgets based on current panel sizes
         d_width = max(40, d_panel.size.width - 4)
         c_width = max(30, c_panel.size.width - 4)
 
-        fixed_d = 3 + 4 * 4 + 5 + 4
+        # Drivers table columns: Pos(3), Pts(5), Wins(4) are fixed; Driver/Team share remainder
+        fixed_d = 3 + 5 + 4
         flex_d = max(0, d_width - fixed_d)
-        driver_w = max(10, int(flex_d * 0.55))
+        # Favor more width for driver names so they are fully visible.
+        driver_w = max(10, int(flex_d * 0.65))
         team_w = max(8, flex_d - driver_w)
 
-        fixed_c = 3 + 3 * 3 + 5 + 4
+        # Constructors table columns: Pos(3), Pts(5), Wins(4) are fixed; Name gets the rest
+        fixed_c = 3 + 5 + 4
         name_w = max(10, c_width - fixed_c)
 
         try:
+            # Drivers table: [0]=Pos, [1]=Driver, [2]=Team, [3]=Pts, [4]=Wins
             dtab.set_column_width(0, 3)
-            dtab.set_column_width(3, 5)
-            dtab.set_column_width(4, 4)
-            ctab.set_column_width(0, 3)
-            ctab.set_column_width(2, 5)
-            ctab.set_column_width(3, 4)
             dtab.set_column_width(1, driver_w)
             dtab.set_column_width(2, team_w)
+            dtab.set_column_width(3, 5)
+            dtab.set_column_width(4, 4)
+
+            # Constructors table: [0]=Pos, [1]=Constructor, [2]=Pts, [3]=Wins
+            ctab.set_column_width(0, 3)
             ctab.set_column_width(1, name_w)
+            ctab.set_column_width(2, 5)
+            ctab.set_column_width(3, 4)
         except Exception:
             pass
 
+        # Populate data
         dtab.clear()
         for d in self._drivers_data:
             pos = str(d.get("position"))
