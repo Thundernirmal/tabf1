@@ -184,6 +184,7 @@ class F1DashboardApp(App):
 
     def __init__(self):
         super().__init__()
+        self.theme = "tokyo-night"
         self._drivers_data = []
         self._constructors_data = []
 
@@ -205,6 +206,7 @@ class F1DashboardApp(App):
         self.call_after_refresh(self.render_tables)
 
     def on_mount(self) -> None:
+        self.theme = "tokyo-night"
         year = get_current_year()
         d_panel = self.query_one("#drivers-panel", StandingsPanel)
         c_panel = self.query_one("#constructors-panel", StandingsPanel)

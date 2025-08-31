@@ -1,7 +1,7 @@
 /* Tokyo Night theme (exact palette) */
 
 Screen {
-    background: transparent; /* background */
+    background: transparent;
 }
 #title, #season {
     width: 100%;
@@ -11,24 +11,24 @@ Screen {
 #title {
     padding: 0 0 0 0;
     margin: 1 0 0 0;
-    color: #7AA2F7; /* blue */
+    color: auto;
     text-style: bold;
 }
 
 #season {
     margin: 0 0 1 0;
-    color: #A9B1D6; /* white */
+    color: auto;
 }
 
 Header {
     background: transparent; /* black */
-    color: #C0CAF5;
+    color: auto;
     text-style: bold;
 }
 
 Footer {
     background: transparent; /* black */
-    color: #A9B1D6;
+    color: auto;
     height: 3;
 }
 
@@ -41,7 +41,7 @@ Footer {
 }
 
 #drivers-panel, #constructors-panel {
-    border: round #7AA2F7; /* blue */
+    border: round;
     background: transparent;   /* black */
     width: 1fr;
     height: 1fr;
@@ -53,7 +53,7 @@ Footer {
 }
 
 #race-panel {
-    border: round #9ECE6A; /* green */
+    border: round;
     background: transparent;
     width: 100%;
     height: 1fr;
@@ -62,43 +62,55 @@ Footer {
     overflow: hidden;
     border-title-align: center;
     border-subtitle-align: center;
-    border-title-color: #9ECE6A; /* green */
+    border-title-color: auto;
 }
 
 #drivers-panel {
-    border-title-color: #7AA2F7;
+    border-title-color: auto;
 }
 
 #constructors-panel {
-    border-title-color: #7DCFFF; /* cyan */
+    border-title-color: auto;
+}
+
+/* Emphasize focused sections */
+#drivers-panel:focus-within,
+#constructors-panel:focus-within,
+#race-panel:focus-within,
+#detail-wrapper:focus-within {
+    border: heavy;
+    border-title-style: bold;
 }
 
 DataTable {
     height: 1fr;
     width: 100%;
     background: transparent;
-    color: #C0CAF5;
+    color: auto;
     border: none;
     overflow: hidden;
 }
 
 DataTable > .datatable--header {
     background: transparent;
-    color: #A9B1D6;
+    color: auto;
     text-style: bold;
 }
 
+/* Clear and accessible row selection */
 DataTable > .datatable--cursor {
-    background: #33467C; /* selectionBackground */
+    background: transparent;
+    text-style: reverse bold;
 }
 
 DataTable > .datatable--row {
-    background: #1A1B26; /* row background */
-    color: #C0CAF5; /* row text color */
+    background: transparent; /* inherit terminal background */
+    color: auto;
 }
 
 DataTable > .datatable--row:hover {
-    background: #414868; /* hover background */
+    background: transparent;
+    text-style: reverse;
 }
 
 DataTable > .datatable--fixed {
@@ -114,14 +126,14 @@ DataTable > .datatable--hover {
     width: 90%;
     height: auto;
     background: transparent;
-    border: round #7AA2F7;
+    border: round;
     padding: 1 2;
     align: center middle;
     content-align: center top;
 }
 
 #detail-title {
-    color: #C0CAF5;
+    color: auto;
     margin: 0 0 1 0;
     text-style: bold;
     width: 100%;
