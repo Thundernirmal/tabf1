@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from textual.app import App, ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Footer, Header, DataTable
+from textual.widgets import Footer, DataTable
 from textual.events import Resize
 from textual.widgets import Static
 
@@ -123,8 +123,8 @@ def get_latest_race(force=False):
 def get_race_results(season, round_no, force=False):
     """Get detailed race results for a specific race."""
     data = fetch_with_cache(
-        f"/ergast/f1/{season}/{round_no}/results.json", 
-        f"race_results_{season}_{round_no}", 
+        f"/ergast/f1/{season}/{round_no}/results.json",
+        f"race_results_{season}_{round_no}",
         force=force
     )
     races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
@@ -208,8 +208,8 @@ class F1DashboardApp(App):
         year = get_current_year()
         d_panel = self.query_one("#drivers-panel", StandingsPanel)
         c_panel = self.query_one("#constructors-panel", StandingsPanel)
-        d_panel.styles.border_title = f"Drivers — {year}"
-        c_panel.styles.border_title = f"Constructors — {year}"
+        d_panel.border_title = f"Drivers — {year}"
+        c_panel.border_title = f"Constructors — {year}"
         dtab = d_panel.table
         ctab = c_panel.table
         assert dtab and ctab
@@ -298,18 +298,18 @@ class F1DashboardApp(App):
         # Fetch data synchronously with short timeout; small datasets
         d_panel = self.query_one("#drivers-panel", StandingsPanel)
         c_panel = self.query_one("#constructors-panel", StandingsPanel)
-        d_panel.styles.border_subtitle = "Loading…"
-        c_panel.styles.border_subtitle = "Loading…"
+        d_panel.border_subtitle = "Loading…"
+        c_panel.border_subtitle = "Loading…"
         self.refresh()
         try:
             self._drivers_data = get_driver_standings(force=force)
             self._constructors_data = get_constructor_standings(force=force)
-            d_panel.styles.border_subtitle = f"Total {len(self._drivers_data)} drivers"
-            c_panel.styles.border_subtitle = f"Total {len(self._constructors_data)} constructors"
+            d_panel.border_subtitle = f"Total {len(self._drivers_data)} drivers"
+            c_panel.border_subtitle = f"Total {len(self._constructors_data)} constructors"
         except Exception as e:
             msg = f"Error: {e}"
-            d_panel.styles.border_subtitle = msg
-            c_panel.styles.border_subtitle = msg
+            d_panel.border_subtitle = msg
+            c_panel.border_subtitle = msg
         finally:
             # Defer render to the next refresh so sizes are accurate.
             self.call_after_refresh(self.render_tables)
@@ -339,18 +339,20 @@ class F1DashboardApp(App):
 
         try:
             # Drivers table: [0]=Pos, [1]=Driver, [2]=Team, [3]=Pts, [4]=Wins
-            dtab.set_column_width(0, 3)
-            dtab.set_column_width(1, driver_w)
-            dtab.set_column_width(2, team_w)
-            dtab.set_column_width(3, 5)
-            dtab.set_column_width(4, 4)
+            if hasattr(dtab, 'set_column_width'):
+                dtab.set_column_width(0, 3)  # type: ignore
+                dtab.set_column_width(1, driver_w)  # type: ignore
+                dtab.set_column_width(2, team_w)  # type: ignore
+                dtab.set_column_width(3, 5)  # type: ignore
+                dtab.set_column_width(4, 4)  # type: ignore
 
             # Constructors table: [0]=Pos, [1]=Constructor, [2]=Pts, [3]=Wins
-            ctab.set_column_width(0, 3)
-            ctab.set_column_width(1, name_w)
-            ctab.set_column_width(2, 5)
-            ctab.set_column_width(3, 4)
-        except Exception:
+            if hasattr(ctab, 'set_column_width'):
+                ctab.set_column_width(0, 3)  # type: ignore
+                ctab.set_column_width(1, name_w)  # type: ignore
+                ctab.set_column_width(2, 5)  # type: ignore
+                ctab.set_column_width(3, 4)  # type: ignore
+        except (AttributeError, Exception):
             pass
 
         # Populate data
@@ -408,7 +410,7 @@ class RaceScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         year = get_current_year()
         r_panel = self.query_one("#race-panel", RacePanel)
-        r_panel.styles.border_title = f"All Races — {year}"
+        r_panel.border_title = f"All Races — {year}"
         rtab = r_panel.table
         assert rtab
         rtab.cursor_type = "row"
@@ -427,7 +429,7 @@ class RaceScreen(ModalScreen[None]):
             if 0 <= race_idx < len(self._all_races):
                 selected_race = self._all_races[race_idx]
                 status = selected_race.get("Status", "scheduled")
-                
+
                 # Check if race has results
                 if selected_race.get("Results") and status == "completed":
                     self.app.push_screen(RaceDetailScreen(selected_race))
@@ -458,14 +460,14 @@ class RaceScreen(ModalScreen[None]):
 
     def load_race_data(self, force=False) -> None:
         r_panel = self.query_one("#race-panel", RacePanel)
-        r_panel.styles.border_subtitle = "Loading…"
+        r_panel.border_subtitle = "Loading…"
         self.refresh()
         try:
             year = get_current_year()
             self._all_races = get_all_races_season(year, force=force)
-            r_panel.styles.border_subtitle = f"{len(self._all_races)} races in {year}"
+            r_panel.border_subtitle = f"{len(self._all_races)} races in {year}"
         except Exception as e:
-            r_panel.styles.border_subtitle = f"Error: {e}"
+            r_panel.border_subtitle = f"Error: {e}"
         finally:
             self.call_after_refresh(self.render_race_table)
             self.refresh()
@@ -477,7 +479,7 @@ class RaceScreen(ModalScreen[None]):
 
         # Width budget based on panel size
         r_width = max(80, r_panel.size.width - 4)
-        
+
         # Race table columns: Date(12), Laps(5), Race Time(12) are fixed; Grand Prix/Winner/Team share remainder
         fixed_r = 12 + 5 + 12
         flex_r = max(0, r_width - fixed_r)
@@ -487,13 +489,14 @@ class RaceScreen(ModalScreen[None]):
 
         try:
             # Race table: [0]=Grand Prix, [1]=Date, [2]=Winner, [3]=Team, [4]=Laps, [5]=Race Time
-            rtab.set_column_width(0, gp_w)
-            rtab.set_column_width(1, 12)
-            rtab.set_column_width(2, winner_w)
-            rtab.set_column_width(3, team_w)
-            rtab.set_column_width(4, 5)
-            rtab.set_column_width(5, 12)
-        except Exception:
+            if hasattr(rtab, 'set_column_width'):
+                rtab.set_column_width(0, gp_w)  # type: ignore
+                rtab.set_column_width(1, 12)  # type: ignore
+                rtab.set_column_width(2, winner_w)  # type: ignore
+                rtab.set_column_width(3, team_w)  # type: ignore
+                rtab.set_column_width(4, 5)  # type: ignore
+                rtab.set_column_width(5, 12)  # type: ignore
+        except (AttributeError, Exception):
             pass
 
         # Populate race table with all season races
@@ -506,7 +509,7 @@ class RaceScreen(ModalScreen[None]):
             grand_prix = f"{race_name}"
             if country:
                 grand_prix += f" ({country})"
-            
+
             # Date - format as "Mar 16, 2025"
             date = race.get("date", "")
             formatted_date = ""
@@ -516,7 +519,7 @@ class RaceScreen(ModalScreen[None]):
                     formatted_date = date_obj.strftime("%b %d, %Y")
                 except:
                     formatted_date = date
-            
+
             # Get race results and status
             results = race.get("Results", [])
             status = race.get("Status", "scheduled")
@@ -524,7 +527,7 @@ class RaceScreen(ModalScreen[None]):
             winner_team = ""
             total_laps = ""
             race_time = ""
-            
+
             if results and status == "completed":
                 # Race has been completed with results
                 winner = results[0]  # First position is winner
@@ -532,7 +535,7 @@ class RaceScreen(ModalScreen[None]):
                 winner_name = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
                 winner_team = winner.get("Constructor", {}).get("name", "")
                 total_laps = str(winner.get("laps", ""))
-                
+
                 # Race time
                 time_info = winner.get("Time", {})
                 if time_info:
@@ -549,7 +552,7 @@ class RaceScreen(ModalScreen[None]):
                 winner_team = "TBD"
                 total_laps = "TBD"
                 race_time = "TBD"
-            
+
             rtab.add_row(
                 self._truncate(grand_prix, gp_w),
                 self._truncate(formatted_date, 12),
@@ -609,7 +612,7 @@ def get_constructor_last_results(constructor_id: str, limit: int = 10):
 def get_all_races_season(season, force=False):
     """Get all races for a season, fetching individual race results for accurate data."""
     from datetime import datetime, date
-    
+
     # First get all scheduled races
     schedule_data = fetch_with_cache(
         f"/ergast/f1/{season}.json?limit=100",
@@ -618,16 +621,16 @@ def get_all_races_season(season, force=False):
         force=force
     )
     scheduled_races = schedule_data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
-    
+
     # Get today's date for comparison
     today = date.today()
-    
+
     # For each race, fetch individual results if race should be completed
     all_races = []
     for race in scheduled_races:
         round_num = race.get("round")
         race_date_str = race.get("date", "")
-        
+
         # Parse race date
         race_date = None
         if race_date_str:
@@ -635,9 +638,9 @@ def get_all_races_season(season, force=False):
                 race_date = datetime.strptime(race_date_str, "%Y-%m-%d").date()
             except:
                 pass
-        
+
         race_copy = race.copy()
-        
+
         # Check if race should be completed and fetch individual results
         if race_date and race_date <= today:
             # Try to fetch individual race results
@@ -649,7 +652,7 @@ def get_all_races_season(season, force=False):
                     force=force
                 )
                 individual_races = individual_race_data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
-                
+
                 if individual_races and individual_races[0].get("Results"):
                     # Race has results available
                     race_copy["Results"] = individual_races[0]["Results"]
@@ -666,9 +669,9 @@ def get_all_races_season(season, force=False):
             # Future race
             race_copy["Results"] = []
             race_copy["Status"] = "scheduled"
-        
+
         all_races.append(race_copy)
-    
+
     return all_races
 
 
@@ -704,7 +707,7 @@ class RaceDetailScreen(ModalScreen[None]):
         circuit_name = circuit.get("circuitName", "")
         country = circuit.get("Location", {}).get("country", "")
         date = self.race.get("date", "")
-        
+
         title = f"🏁 {race_name}"
         if circuit_name:
             title += f" — {circuit_name}"
@@ -712,7 +715,7 @@ class RaceDetailScreen(ModalScreen[None]):
             title += f" ({country})"
         if date:
             title += f" • {date}"
-        
+
         header = Static(title, id="detail-title")
         table = DataTable(id="detail-table")
         self.table = table
@@ -729,26 +732,27 @@ class RaceDetailScreen(ModalScreen[None]):
                 name = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
                 team = result.get("Constructor", {}).get("name", "")
                 grid = str(result.get("grid", ""))
-                
+
                 # Handle time or status
                 time_info = result.get("Time", {})
                 if time_info:
                     time_str = time_info.get("time", "")
                 else:
                     time_str = result.get("status", "")
-                
+
                 pts = str(result.get("points", ""))
                 self.table.add_row(pos, name, team, grid, time_str, pts)
-            
+
             try:
                 # Set column widths for race results
-                self.table.set_column_width(0, 3)   # Pos
-                self.table.set_column_width(1, 20)  # Driver
-                self.table.set_column_width(2, 15)  # Team
-                self.table.set_column_width(3, 4)   # Grid
-                self.table.set_column_width(4, 15)  # Time/Status
-                self.table.set_column_width(5, 4)   # Pts
-            except Exception:
+                if hasattr(self.table, 'set_column_width'):
+                    self.table.set_column_width(0, 3)   # type: ignore  # Pos
+                    self.table.set_column_width(1, 20)  # type: ignore  # Driver
+                    self.table.set_column_width(2, 15)  # type: ignore  # Team
+                    self.table.set_column_width(3, 4)   # type: ignore  # Grid
+                    self.table.set_column_width(4, 15)  # type: ignore  # Time/Status
+                    self.table.set_column_width(5, 4)   # type: ignore  # Pts
+            except (AttributeError, Exception):
                 pass
 
     def on_key(self, event):  # close on ESC/Enter
@@ -788,9 +792,13 @@ class DriverDetailScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         # Show loading state, then fetch in a background task
         title = self.query_one("#detail-title", Static)
-        title.update(title.renderable + " — Loading…")
+        title.update(str(title.renderable) + " — Loading…")
 
-        # Simple spinner animation on the title while loading
+        self._start_spinner()
+        self.run_worker(self._load_driver_data())
+
+    def _start_spinner(self):
+        """Start the loading spinner animation."""
         def spin():
             frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
@@ -803,48 +811,57 @@ class DriverDetailScreen(ModalScreen[None]):
 
         self._spinner_timer = self.set_interval(0.1, spin)
 
-        async def load():
+    def _stop_spinner(self):
+        """Stop the loading spinner."""
+        if self._spinner_timer:
             try:
-                driver_id = self.driver.get("Driver", {}).get("driverId", "")
-                races = get_driver_last_results(driver_id, limit=10)
-                rows = []
-                for r in reversed(races):
-                    round_no = r.get("round", "")
-                    gp = r.get("raceName", "")
-                    results = r.get("Results", [])
-                    result = results[0] if results else {}
-                    grid = result.get("grid", "")
-                    finish = result.get("positionText", result.get("position", ""))
-                    status = result.get("status", "")
-                    pts = result.get("points", "")
-                    rows.append((round_no, gp, grid, finish, status, pts))
-                if self.table:
-                    self.table.clear()
-                    for row in rows:
-                        self.table.add_row(*[str(x) for x in row])
-                    try:
-                        self.table.set_column_width(0, 4)
-                        self.table.set_column_width(2, 4)
-                        self.table.set_column_width(3, 6)
-                        self.table.set_column_width(5, 4)
-                    except Exception:
-                        pass
-                if self._spinner_timer:
-                    # Textual Timer doesn't have cancel(); use stop()
-                    try:
-                        self._spinner_timer.stop()
-                    except Exception:
-                        pass
-                title.update(str(title.renderable).split(" — Loading…", 1)[0])
-            except Exception as e:
-                if self._spinner_timer:
-                    try:
-                        self._spinner_timer.stop()
-                    except Exception:
-                        pass
-                title.update(f"{title.renderable} — Error: {e}")
+                self._spinner_timer.stop()
+            except Exception:
+                pass
 
-        self.run_worker(load())
+    async def _load_driver_data(self):
+        """Load driver race data."""
+        try:
+            driver_id = self.driver.get("Driver", {}).get("driverId", "")
+            races = get_driver_last_results(driver_id, limit=10)
+            self._populate_driver_table(races)
+            self._stop_spinner()
+            title = self.query_one("#detail-title", Static)
+            title.update(str(title.renderable).split(" — Loading…", 1)[0])
+        except Exception as e:
+            self._stop_spinner()
+            title = self.query_one("#detail-title", Static)
+            title.update(f"{title.renderable} — Error: {e}")
+
+    def _populate_driver_table(self, races):
+        """Populate the driver results table."""
+        if not self.table:
+            return
+
+        rows = []
+        for r in reversed(races):
+            round_no = r.get("round", "")
+            gp = r.get("raceName", "")
+            results = r.get("Results", [])
+            result = results[0] if results else {}
+            grid = result.get("grid", "")
+            finish = result.get("positionText", result.get("position", ""))
+            status = result.get("status", "")
+            pts = result.get("points", "")
+            rows.append((round_no, gp, grid, finish, status, pts))
+
+        self.table.clear()
+        for row in rows:
+            self.table.add_row(*[str(x) for x in row])
+
+        try:
+            if hasattr(self.table, 'set_column_width'):
+                self.table.set_column_width(0, 4)  # type: ignore
+                self.table.set_column_width(2, 4)  # type: ignore
+                self.table.set_column_width(3, 6)  # type: ignore
+                self.table.set_column_width(5, 4)  # type: ignore
+        except (AttributeError, Exception):
+            pass
 
     def on_key(self, event):  # close on ESC/Enter
         if getattr(event, "key", None) in ("escape", "enter"):
@@ -870,8 +887,13 @@ class ConstructorDetailScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         # Show loading state, then fetch in a background task
         title = self.query_one("#detail-title", Static)
-        title.update(title.renderable + " — Loading…")
+        title.update(str(title.renderable) + " — Loading…")
 
+        self._start_spinner()
+        self.run_worker(self._load_constructor_data())
+
+    def _start_spinner(self):
+        """Start the loading spinner animation."""
         def spin():
             frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
@@ -884,51 +906,59 @@ class ConstructorDetailScreen(ModalScreen[None]):
 
         self._spinner_timer = self.set_interval(0.1, spin)
 
-        async def load():
+    def _stop_spinner(self):
+        """Stop the loading spinner."""
+        if self._spinner_timer:
             try:
-                const_id = self.constructor.get("Constructor", {}).get("constructorId", "")
-                races = get_constructor_last_results(const_id, limit=10)
-                rows = []
-                for r in reversed(races):
-                    round_no = r.get("round", "")
-                    gp = r.get("raceName", "")
-                    results = r.get("Results", [])
-                    if results:
-                        result = results[0]
-                        car_no = result.get("number", "")
-                        drv = result.get("Driver", {})
-                        drv_name = f"{drv.get('givenName','')} {drv.get('familyName','')}".strip()
-                        finish = result.get("positionText", result.get("position", ""))
-                        pts = result.get("points", "")
-                        rows.append((round_no, gp, car_no, drv_name, finish, pts))
-                if self.table:
-                    self.table.clear()
-                    for row in rows:
-                        self.table.add_row(*[str(x) for x in row])
-                    try:
-                        self.table.set_column_width(0, 4)
-                        self.table.set_column_width(2, 6)
-                        self.table.set_column_width(4, 6)
-                        self.table.set_column_width(5, 4)
-                    except Exception:
-                        pass
-                if self._spinner_timer:
-                    # Textual Timer doesn't have cancel(); use stop()
-                    try:
-                        self._spinner_timer.stop()
-                    except Exception:
-                        pass
-                title.update(str(title.renderable).split(" — Loading…", 1)[0])
-            except Exception as e:
-                if self._spinner_timer:
-                    try:
-                        self._spinner_timer.stop()
-                    except Exception:
-                        pass
-                title.update(f"{title.renderable} — Error: {e}")
+                self._spinner_timer.stop()
+            except Exception:
+                pass
 
-        self.run_worker(load())
-    # end on_mount
+    async def _load_constructor_data(self):
+        """Load constructor race data."""
+        try:
+            const_id = self.constructor.get("Constructor", {}).get("constructorId", "")
+            races = get_constructor_last_results(const_id, limit=10)
+            self._populate_constructor_table(races)
+            self._stop_spinner()
+            title = self.query_one("#detail-title", Static)
+            title.update(str(title.renderable).split(" — Loading…", 1)[0])
+        except Exception as e:
+            self._stop_spinner()
+            title = self.query_one("#detail-title", Static)
+            title.update(f"{title.renderable} — Error: {e}")
+
+    def _populate_constructor_table(self, races):
+        """Populate the constructor results table."""
+        if not self.table:
+            return
+
+        rows = []
+        for r in reversed(races):
+            round_no = r.get("round", "")
+            gp = r.get("raceName", "")
+            results = r.get("Results", [])
+            if results:
+                result = results[0]
+                car_no = result.get("number", "")
+                drv = result.get("Driver", {})
+                drv_name = f"{drv.get('givenName','')} {drv.get('familyName','')}".strip()
+                finish = result.get("positionText", result.get("position", ""))
+                pts = result.get("points", "")
+                rows.append((round_no, gp, car_no, drv_name, finish, pts))
+
+        self.table.clear()
+        for row in rows:
+            self.table.add_row(*[str(x) for x in row])
+
+        try:
+            if hasattr(self.table, 'set_column_width'):
+                self.table.set_column_width(0, 4)  # type: ignore
+                self.table.set_column_width(2, 6)  # type: ignore
+                self.table.set_column_width(4, 6)  # type: ignore
+                self.table.set_column_width(5, 4)  # type: ignore
+        except (AttributeError, Exception):
+            pass
 
     def on_key(self, event):
         if getattr(event, "key", None) in ("escape", "enter"):
