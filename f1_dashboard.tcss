@@ -1,8 +1,12 @@
-/* Tokyo Night theme (exact palette) */
+/* Enhanced F1 Dashboard - Tokyo Night Compatible with Clean Backgrounds */
 
+/* Base styling */
 Screen {
     background: transparent;
+    color: auto;
 }
+
+/* Title and Season styling */
 #title, #season {
     width: 100%;
     content-align: center middle;
@@ -11,38 +15,48 @@ Screen {
 #title {
     padding: 0 0 0 0;
     margin: 1 0 0 0;
-    color: auto;
+    color: #7dcfff;
     text-style: bold;
+    background: transparent;
+    border: round #7aa2f7;
+    height: auto;
 }
 
 #season {
     margin: 0 0 1 0;
-    color: auto;
+    color: #e0af68;
+    text-style: italic;
+    background: transparent;
 }
 
+/* Header and Footer */
 Header {
-    background: transparent; /* black */
+    background: transparent;
     color: auto;
     text-style: bold;
+    border-bottom: wide #7aa2f7;
 }
 
 Footer {
-    background: transparent; /* black */
+    background: transparent;
     color: auto;
     height: 3;
+    border-top: wide #7aa2f7;
 }
 
+/* Main container */
 #main {
     height: 1fr;
     width: 100%;
     layout: horizontal;
     padding: 1 2;
-    background: transparent; /* ensure no default black shows */
+    background: transparent;
+    border: none;
 }
 
+/* Panel styling with transparent backgrounds and colored borders */
 #drivers-panel, #constructors-panel {
-    border: round;
-    background: transparent;   /* black */
+    background: transparent;
     width: 1fr;
     height: 1fr;
     padding: 1 1;
@@ -50,10 +64,21 @@ Footer {
     overflow: hidden;
     border-title-align: center;
     border-subtitle-align: center;
+    border-title-style: bold;
+}
+
+#drivers-panel {
+    border-title-color: #7dcfff;
+    border: round #7dcfff;
+}
+
+#constructors-panel {
+    border-title-color: #bb9af7;
+    border: round #bb9af7;
 }
 
 #race-panel {
-    border: round;
+    border: round #9ece6a;
     background: transparent;
     width: 100%;
     height: 1fr;
@@ -62,26 +87,31 @@ Footer {
     overflow: hidden;
     border-title-align: center;
     border-subtitle-align: center;
-    border-title-color: auto;
-}
-
-#drivers-panel {
-    border-title-color: auto;
-}
-
-#constructors-panel {
-    border-title-color: auto;
-}
-
-/* Emphasize focused sections */
-#drivers-panel:focus-within,
-#constructors-panel:focus-within,
-#race-panel:focus-within,
-#detail-wrapper:focus-within {
-    border: heavy;
+    border-title-color: #9ece6a;
     border-title-style: bold;
 }
 
+/* Focus states with thicker borders only */
+#drivers-panel:focus-within {
+    border: heavy #7dcfff;
+    border-title-style: bold;
+}
+
+#constructors-panel:focus-within {
+    border: heavy #bb9af7;
+    border-title-style: bold;
+}
+
+#race-panel:focus-within {
+    border: heavy #9ece6a;
+    border-title-style: bold;
+}
+
+#detail-wrapper:focus-within {
+    border: heavy #7aa2f7;
+}
+
+/* Clean DataTable styling with transparent backgrounds */
 DataTable {
     height: 1fr;
     width: 100%;
@@ -93,18 +123,19 @@ DataTable {
 
 DataTable > .datatable--header {
     background: transparent;
-    color: auto;
+    color: #7dcfff;
     text-style: bold;
 }
 
-/* Clear and accessible row selection */
+/* Clean row selection */
 DataTable > .datatable--cursor {
     background: transparent;
+    color: auto;
     text-style: reverse bold;
 }
 
 DataTable > .datatable--row {
-    background: transparent; /* inherit terminal background */
+    background: transparent;
     color: auto;
 }
 
@@ -115,29 +146,34 @@ DataTable > .datatable--row:hover {
 
 DataTable > .datatable--fixed {
     background: transparent;
+    color: #e0af68;
+    text-style: bold;
 }
 
 DataTable > .datatable--hover {
-    background: transparent; /* brightBlack */
+    background: transparent;
 }
 
-/* Details modal styling */
+/* Clean modal styling */
 #detail-wrapper {
     width: 90%;
     height: auto;
     background: transparent;
-    border: round;
-    padding: 1 2;
+    border: thick #7aa2f7;
+    padding: 2 3;
     align: center middle;
     content-align: center top;
 }
 
 #detail-title {
-    color: auto;
-    margin: 0 0 1 0;
+    color: #7dcfff;
+    margin: 0 0 2 0;
     text-style: bold;
     width: 100%;
     content-align: center middle;
+    background: transparent;
+    border: round #7aa2f7;
+    padding: 1 2;
 }
 
 #detail-table {
@@ -146,4 +182,5 @@ DataTable > .datatable--hover {
     background: transparent;
     align: center middle;
     content-align: center top;
+    border: none;
 }

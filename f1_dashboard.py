@@ -8,16 +8,62 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, DataTable
 from textual.events import Resize
 from textual.widgets import Static
+from rich.text import Text
+from rich.console import Console
 
 CACHE_FILE = "f1_cache.json"
 API_BASE = "http://api.jolpi.ca"
 
-# Minimal, elegant banner for TabF1
+# Enhanced F1 banner with Tokyo Night aesthetics
 ASCII_ART = (
-    "┌─────── TabF1 ──────┐\n"
-    "│  F1 Standings TUI  │\n"
-    "└────────────────────┘"
+    "╭─────────────────────────────────╮\n"
+    "│  🏎️  [bold cyan]TabF1[/] - F1 Dashboard  🏁   │\n"
+    "│     [yellow]Live Standings & Results[/]    │\n"
+    "╰─────────────────────────────────╯"
 )
+
+
+def style_position(position: int, text: str) -> str:
+    """Style text based on championship position with F1-appropriate colors."""
+    if position == 1:
+        # Gold for championship leader
+        return f"[bold yellow]{text}[/]"
+    elif position == 2:
+        # Silver for second place
+        return f"[bold white]{text}[/]"
+    elif position == 3:
+        # Bronze/orange for third place
+        return f"[bold #ff9e64]{text}[/]"
+    elif position <= 10:
+        # Points positions in green
+        return f"[bold #9ece6a]{text}[/]"
+    else:
+        # Non-points positions in muted color
+        return f"[#9aa5ce]{text}[/]"
+
+
+def style_points(points: str) -> str:
+    """Style points with color coding."""
+    try:
+        pts = float(points)
+        if pts > 0:
+            return f"[bold #9ece6a]{points}[/]"  # Green for points
+        else:
+            return f"[#9aa5ce]{points}[/]"  # Muted for zero points
+    except ValueError:
+        return f"[#9aa5ce]{points}[/]"
+
+
+def add_status_indicator(text: str, status: str = "normal") -> str:
+    """Add visual status indicators."""
+    if status == "loading":
+        return f"[italic #7dcfff]{text}[/]"
+    elif status == "error":
+        return f"[bold #f7768e]{text}[/]"
+    elif status == "success":
+        return f"[#9ece6a]{text}[/]"
+    
+    return text
 
 
 def get_cache():
@@ -189,13 +235,13 @@ class F1DashboardApp(App):
         self._constructors_data = []
 
     def compose(self) -> ComposeResult:
-        # Title and season header (compact)
-        yield Static(ASCII_ART, id="title")
-        yield Static(f"Season {get_current_year()}", id="season")
+        # Enhanced title with Rich markup support
+        yield Static(ASCII_ART, id="title", markup=True)
+        yield Static(f"[italic yellow]Season {get_current_year()}[/]", id="season", markup=True)
         # Main standings panels
         yield Horizontal(
-            StandingsPanel("drivers-panel", "Drivers Standings"),
-            StandingsPanel("constructors-panel", "Constructors Standings"),
+            StandingsPanel("drivers-panel", "🏎️  Drivers Standings"),
+            StandingsPanel("constructors-panel", "🏁  Constructors Standings"),
             id="main",
         )
         yield Footer()
@@ -297,19 +343,19 @@ class F1DashboardApp(App):
         return text[: max(0, width - 1)] + "…"
 
     def load_data(self, force=False) -> None:
-        # Fetch data synchronously with short timeout; small datasets
+        # Fetch data synchronously with enhanced status indicators
         d_panel = self.query_one("#drivers-panel", StandingsPanel)
         c_panel = self.query_one("#constructors-panel", StandingsPanel)
-        d_panel.border_subtitle = "Loading…"
-        c_panel.border_subtitle = "Loading…"
+        d_panel.border_subtitle = "⏳ Loading…"
+        c_panel.border_subtitle = "⏳ Loading…"
         self.refresh()
         try:
             self._drivers_data = get_driver_standings(force=force)
             self._constructors_data = get_constructor_standings(force=force)
-            d_panel.border_subtitle = f"Total {len(self._drivers_data)} drivers"
-            c_panel.border_subtitle = f"Total {len(self._constructors_data)} constructors"
+            d_panel.border_subtitle = f"✅ {len(self._drivers_data)} drivers"
+            c_panel.border_subtitle = f"✅ {len(self._constructors_data)} constructors"
         except Exception as e:
-            msg = f"Error: {e}"
+            msg = f"❌ Error: {e}"
             d_panel.border_subtitle = msg
             c_panel.border_subtitle = msg
         finally:
@@ -357,32 +403,44 @@ class F1DashboardApp(App):
         except (AttributeError, Exception):
             pass
 
-        # Populate data
+        # Populate data with enhanced styling
         dtab.clear()
-        for d in self._drivers_data:
-            pos = str(d.get("position"))
+        for i, d in enumerate(self._drivers_data):
+            position = int(d.get("position", 0))
+            pos_text = str(d.get("position"))
             name = f"{d.get('Driver', {}).get('givenName', '')} {d.get('Driver', {}).get('familyName', '')}".strip()
             team = d.get("Constructors", [{}])[0].get("name", "") if d.get("Constructors") else ""
             pts = str(d.get("points"))
             wins = str(d.get("wins"))
+            
+            # Style the position and points based on championship standing
+            styled_pos = style_position(position, self._truncate(pos_text, 3))
+            styled_pts = style_points(self._truncate(pts, 5))
+            
             dtab.add_row(
-                self._truncate(pos, 3),
+                styled_pos,
                 self._truncate(name, driver_w),
                 self._truncate(team, team_w),
-                self._truncate(pts, 5),
+                styled_pts,
                 self._truncate(wins, 4),
             )
 
         ctab.clear()
         for c in self._constructors_data:
-            pos = str(c.get("position"))
+            position = int(c.get("position", 0))
+            pos_text = str(c.get("position"))
             name = c.get("Constructor", {}).get("name", "")
             pts = str(c.get("points"))
             wins = str(c.get("wins"))
+            
+            # Style the position and points for constructors
+            styled_pos = style_position(position, self._truncate(pos_text, 3))
+            styled_pts = style_points(self._truncate(pts, 5))
+            
             ctab.add_row(
-                self._truncate(pos, 3),
+                styled_pos,
                 self._truncate(name, name_w),
-                self._truncate(pts, 5),
+                styled_pts,
                 self._truncate(wins, 4),
             )
 
@@ -405,7 +463,7 @@ class RaceScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         yield Static("┌─────── F1 Race Results ──────┐\n│     All Races This Season    │\n└──────────────────────────────┘", id="title")
-        yield Static(f"Season {get_current_year()}", id="season")
+        # yield Static(f"Season {get_current_year()}", id="season")
         yield RacePanel("race-panel", "All Season Races")
         yield Footer()
 
@@ -462,14 +520,14 @@ class RaceScreen(ModalScreen[None]):
 
     def load_race_data(self, force=False) -> None:
         r_panel = self.query_one("#race-panel", RacePanel)
-        r_panel.border_subtitle = "Loading…"
+        r_panel.border_subtitle = "⏳ Loading…"
         self.refresh()
         try:
             year = get_current_year()
             self._all_races = get_all_races_season(year, force=force)
-            r_panel.border_subtitle = f"{len(self._all_races)} races in {year}"
+            r_panel.border_subtitle = f"🏁 {len(self._all_races)} races in {year}"
         except Exception as e:
-            r_panel.border_subtitle = f"Error: {e}"
+            r_panel.border_subtitle = f"❌ Error: {e}"
         finally:
             self.call_after_refresh(self.render_race_table)
             self.refresh()
@@ -805,9 +863,10 @@ class DriverDetailScreen(ModalScreen[None]):
         self.run_worker(self._load_driver_data())
 
     def _start_spinner(self):
-        """Start the loading spinner animation."""
+        """Start the enhanced loading spinner animation."""
         def spin():
-            frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+            # Racing-themed spinner frames
+            frames = ["🏎️💨", "🏁🏎️", "💨🏎️", "🏎️🏁", "🏁💨", "💨🏁"]
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
             try:
                 t = self.query_one("#detail-title", Static)
@@ -817,7 +876,7 @@ class DriverDetailScreen(ModalScreen[None]):
             except Exception:
                 pass
 
-        self._spinner_timer = self.set_interval(0.1, spin)
+        self._spinner_timer = self.set_interval(0.3, spin)
 
     def _stop_spinner(self):
         """Stop the loading spinner."""
@@ -908,9 +967,10 @@ class ConstructorDetailScreen(ModalScreen[None]):
         self.run_worker(self._load_constructor_data())
 
     def _start_spinner(self):
-        """Start the loading spinner animation."""
+        """Start the enhanced loading spinner animation."""
         def spin():
-            frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+            # Racing-themed spinner frames for constructors
+            frames = ["🏁🔧", "🔧🏎️", "🏎️🏁", "🏁🏎️", "🔧🏁", "🏎️🔧"]
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
             try:
                 t = self.query_one("#detail-title", Static)
@@ -920,7 +980,7 @@ class ConstructorDetailScreen(ModalScreen[None]):
             except Exception:
                 pass
 
-        self._spinner_timer = self.set_interval(0.1, spin)
+        self._spinner_timer = self.set_interval(0.3, spin)
 
     def _stop_spinner(self):
         """Stop the loading spinner."""
