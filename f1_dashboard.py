@@ -774,6 +774,8 @@ class DriverDetailScreen(ModalScreen[None]):
         self.table: DataTable | None = None
         self._spinner_idx = 0
         self._spinner_timer = None
+        self._title_base = ""
+        self._current_title = ""
 
     def compose(self) -> ComposeResult:
         drv = self.driver.get('Driver', {})
@@ -785,7 +787,9 @@ class DriverDetailScreen(ModalScreen[None]):
             title += f" ({code})"
         if team:
             title += f" — {team}"
-        header = Static(title, id="detail-title")
+        self._title_base = title
+        self._current_title = title
+        header = Static(self._title_base, id="detail-title")
         table = DataTable(id="detail-table")
         self.table = table
         table.add_columns("Rnd", "Grand Prix", "Grid", "Finish", "Status", "Pts")
@@ -794,7 +798,8 @@ class DriverDetailScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         # Show loading state, then fetch in a background task
         title = self.query_one("#detail-title", Static)
-        title.update(str(title.renderable) + " — Loading…")
+        self._current_title = self._title_base + " — Loading…"
+        title.update(self._current_title)
 
         self._start_spinner()
         self.run_worker(self._load_driver_data())
@@ -806,8 +811,9 @@ class DriverDetailScreen(ModalScreen[None]):
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
             try:
                 t = self.query_one("#detail-title", Static)
-                base = str(t.renderable).split(" — Loading…", 1)[0]
-                t.update(f"{base} — Loading… {frames[self._spinner_idx]}")
+                base = self._current_title.split(" — Loading…", 1)[0]
+                self._current_title = f"{base} — Loading… {frames[self._spinner_idx]}"
+                t.update(self._current_title)
             except Exception:
                 pass
 
@@ -829,11 +835,13 @@ class DriverDetailScreen(ModalScreen[None]):
             self._populate_driver_table(races)
             self._stop_spinner()
             title = self.query_one("#detail-title", Static)
-            title.update(str(title.renderable).split(" — Loading…", 1)[0])
+            self._current_title = self._current_title.split(" — Loading…", 1)[0]
+            title.update(self._current_title)
         except Exception as e:
             self._stop_spinner()
             title = self.query_one("#detail-title", Static)
-            title.update(f"{title.renderable} — Error: {e}")
+            self._current_title = f"{self._title_base} — Error: {e}"
+            title.update(self._current_title)
 
     def _populate_driver_table(self, races):
         """Populate the driver results table."""
@@ -877,10 +885,14 @@ class ConstructorDetailScreen(ModalScreen[None]):
         self.table: DataTable | None = None
         self._spinner_idx = 0
         self._spinner_timer = None
+        self._title_base = ""
+        self._current_title = ""
 
     def compose(self) -> ComposeResult:
         name = self.constructor.get("Constructor", {}).get("name", "")
-        header = Static(f"Constructor: {name}", id="detail-title")
+        self._title_base = f"Constructor: {name}"
+        self._current_title = self._title_base
+        header = Static(self._title_base, id="detail-title")
         table = DataTable(id="detail-table")
         self.table = table
         table.add_columns("Rnd", "Grand Prix", "Car #", "Driver", "Finish", "Pts")
@@ -889,7 +901,8 @@ class ConstructorDetailScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         # Show loading state, then fetch in a background task
         title = self.query_one("#detail-title", Static)
-        title.update(str(title.renderable) + " — Loading…")
+        self._current_title = self._title_base + " — Loading…"
+        title.update(self._current_title)
 
         self._start_spinner()
         self.run_worker(self._load_constructor_data())
@@ -901,8 +914,9 @@ class ConstructorDetailScreen(ModalScreen[None]):
             self._spinner_idx = (self._spinner_idx + 1) % len(frames)
             try:
                 t = self.query_one("#detail-title", Static)
-                base = str(t.renderable).split(" — Loading…", 1)[0]
-                t.update(f"{base} — Loading… {frames[self._spinner_idx]}")
+                base = self._current_title.split(" — Loading…", 1)[0]
+                self._current_title = f"{base} — Loading… {frames[self._spinner_idx]}"
+                t.update(self._current_title)
             except Exception:
                 pass
 
@@ -924,11 +938,13 @@ class ConstructorDetailScreen(ModalScreen[None]):
             self._populate_constructor_table(races)
             self._stop_spinner()
             title = self.query_one("#detail-title", Static)
-            title.update(str(title.renderable).split(" — Loading…", 1)[0])
+            self._current_title = self._current_title.split(" — Loading…", 1)[0]
+            title.update(self._current_title)
         except Exception as e:
             self._stop_spinner()
             title = self.query_one("#detail-title", Static)
-            title.update(f"{title.renderable} — Error: {e}")
+            self._current_title = f"{self._title_base} — Error: {e}"
+            title.update(self._current_title)
 
     def _populate_constructor_table(self, races):
         """Populate the constructor results table."""
