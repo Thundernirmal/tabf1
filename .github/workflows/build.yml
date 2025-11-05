@@ -1,0 +1,72 @@
+name: Build Executables
+
+on:
+  push:
+    branches:
+      - main
+      - claude/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: bun-linux-x64
+            output: tabf1-linux-x64
+          - os: macos-13
+            target: bun-darwin-x64
+            output: tabf1-macos-x64
+          - os: macos-14
+            target: bun-darwin-arm64
+            output: tabf1-macos-arm64
+          - os: windows-latest
+            target: bun-windows-x64
+            output: tabf1-windows-x64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Type check
+        run: bun run typecheck
+
+      - name: Build TypeScript
+        run: bun run build
+
+      - name: Build executable
+        run: |
+          mkdir -p build
+          bun build ./src/index.tsx --compile --target=${{ matrix.target }} --outfile=build/${{ matrix.output }} --minify
+
+      - name: Verify build
+        shell: bash
+        run: |
+          if [ -f "build/${{ matrix.output }}" ]; then
+            ls -lh build/${{ matrix.output }}
+            echo "✓ Executable built successfully"
+          else
+            echo "✗ Executable not found"
+            exit 1
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: build/${{ matrix.output }}
+          retention-days: 7

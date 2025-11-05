@@ -86,6 +86,55 @@ npm link
 tabf1
 ```
 
+### 📦 Build Standalone Executable (Bun)
+
+Create a single, portable executable that can run without Node.js or any dependencies!
+
+**Prerequisites:**
+- Install [Bun](https://bun.sh): `curl -fsSL https://bun.sh/install | bash`
+
+**Build for your current platform:**
+```bash
+npm run build:exe
+# or with bun
+bun run build:exe
+
+# The executable will be in the build/ directory
+./build/tabf1-linux-x64        # Linux
+./build/tabf1-macos-x64         # macOS Intel
+./build/tabf1-macos-arm64       # macOS Apple Silicon
+./build/tabf1-windows-x64.exe   # Windows
+```
+
+**Build for specific platforms:**
+```bash
+npm run build:exe:linux     # Build for Linux x64
+npm run build:exe:macos     # Build for macOS (both Intel and Apple Silicon)
+npm run build:exe:windows   # Build for Windows x64
+npm run build:exe:all       # Build for all platforms
+```
+
+**Standalone script usage:**
+```bash
+# Direct script execution
+./scripts/build.sh              # Build for current platform
+./scripts/build-all.sh          # Build for all platforms
+./scripts/build-linux.sh        # Build for Linux only
+./scripts/build-macos.sh        # Build for macOS only
+./scripts/build-windows.bat     # Build for Windows only (on Windows)
+```
+
+**Benefits:**
+- ✅ Single file - no dependencies needed
+- ✅ Fast startup time
+- ✅ Portable - copy and run anywhere
+- ✅ Small size (~40-60MB including runtime)
+- ✅ No Node.js installation required on target machine
+
+**Download Pre-built Executables:**
+
+Visit the [Releases page](https://github.com/yourusername/tabf1/releases) to download pre-built executables for your platform.
+
 ## 🎮 Usage
 
 ### Keyboard Controls
@@ -158,7 +207,18 @@ tabf1/
 │   │   └── formatters.ts         # Data formatting utilities
 │   ├── App.tsx                   # Root app component
 │   └── index.tsx                 # Entry point
+├── scripts/
+│   ├── build.sh                  # Build executable for current platform
+│   ├── build-all.sh              # Build executables for all platforms
+│   ├── build-linux.sh            # Build for Linux x64
+│   ├── build-macos.sh            # Build for macOS (Intel + Apple Silicon)
+│   └── build-windows.bat         # Build for Windows x64
+├── .github/
+│   └── workflows/
+│       ├── build.yml             # CI build workflow
+│       └── release.yml           # Release automation workflow
 ├── dist/                         # Compiled JavaScript (after build)
+├── build/                        # Standalone executables (after build:exe)
 ├── f1_cache.json                 # API response cache
 ├── package.json                  # Dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
@@ -223,6 +283,32 @@ npm run clean
 
 # Run production build
 npm start
+
+# Build standalone executables
+npm run build:exe           # Build for current platform
+npm run build:exe:all       # Build for all platforms
+npm run build:exe:linux     # Build for Linux x64
+npm run build:exe:macos     # Build for macOS (Intel + Apple Silicon)
+npm run build:exe:windows   # Build for Windows x64
+```
+
+### Automated Builds
+
+The project includes GitHub Actions workflows for automated building and releasing:
+
+- **Build Workflow** (`.github/workflows/build.yml`): Automatically builds executables for all platforms on every push and PR
+- **Release Workflow** (`.github/workflows/release.yml`): Creates GitHub releases with pre-built executables when you push a version tag
+
+**Creating a release:**
+```bash
+# Tag a new version
+git tag v5.0.0
+git push origin v5.0.0
+
+# GitHub Actions will automatically:
+# 1. Build executables for all platforms
+# 2. Create a GitHub release
+# 3. Attach all executables to the release
 ```
 
 ### Contributing
