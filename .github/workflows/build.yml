@@ -51,7 +51,7 @@ jobs:
       - name: Build executable
         run: |
           mkdir -p build
-          NODE_ENV=production bun build ./src/index.tsx --compile --target=${{ matrix.target }} --outfile=build/${{ matrix.output }} --minify
+          bun build ./src/index.tsx --compile --target=${{ matrix.target }} --outfile=build/${{ matrix.output }} --minify
         env:
           NODE_ENV: production
 

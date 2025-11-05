@@ -30,6 +30,7 @@ if not exist "node_modules" (
 
 REM Build executable
 echo 🔨 Compiling for Windows x64...
+set NODE_ENV=production
 call bun build ./src/index.tsx --compile --target=bun-windows-x64 --outfile="%OUTPUT%" --minify
 
 if exist "%OUTPUT%" (
