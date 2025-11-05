@@ -5,7 +5,7 @@ interface HeaderProps {
   season?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ season }) => {
+export const Header = React.memo<HeaderProps>(({ season }) => {
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Box
@@ -28,4 +28,6 @@ export const Header: React.FC<HeaderProps> = ({ season }) => {
       </Box>
     </Box>
   );
-};
+});
+
+Header.displayName = 'Header';

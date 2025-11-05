@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -11,6 +11,15 @@ import type { DriverStanding, ConstructorStanding } from '../types/f1.js';
 
 type FocusPanel = 'drivers' | 'constructors';
 
+const KEY_BINDINGS = [
+  { key: '←/→', description: 'switch panel' },
+  { key: '↑/↓', description: 'navigate' },
+  { key: 'enter', description: 'details' },
+  { key: 'R', description: 'races' },
+  { key: 'r', description: 'refresh' },
+  { key: 'q', description: 'quit' },
+];
+
 export const Dashboard: React.FC = () => {
   const [driverStandings, setDriverStandings] = useState<DriverStanding[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<ConstructorStanding[]>([]);
@@ -22,7 +31,7 @@ export const Dashboard: React.FC = () => {
 
   const { goToRaces, goToDriverDetail, goToConstructorDetail } = useAppStore();
 
-  const loadData = async (force: boolean = false) => {
+  const loadData = useCallback(async (force: boolean = false) => {
     setIsLoading(true);
     setError(null);
 
@@ -39,13 +48,13 @@ export const Dashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  useInput((input, key) => {
+  useInput(useCallback((input, key) => {
     if (isLoading) return;
 
     // Global shortcuts
@@ -109,12 +118,14 @@ export const Dashboard: React.FC = () => {
       }
       return;
     }
-  });
+  }, [isLoading, loadData, goToRaces, focusPanel, driverStandings, constructorStandings, selectedDriverIndex, selectedConstructorIndex, goToDriverDetail, goToConstructorDetail]));
+
+  const season = useMemo(() => f1Client.getCurrentSeason(), []);
 
   if (isLoading && driverStandings.length === 0) {
     return (
       <Box flexDirection="column">
-        <Header season={f1Client.getCurrentSeason()} />
+        <Header season={season} />
         <Loading message="Loading standings..." />
       </Box>
     );
@@ -123,7 +134,7 @@ export const Dashboard: React.FC = () => {
   if (error) {
     return (
       <Box flexDirection="column">
-        <Header season={f1Client.getCurrentSeason()} />
+        <Header season={season} />
         <ErrorMessage message={error} />
       </Box>
     );
@@ -131,7 +142,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Box flexDirection="column">
-      <Header season={f1Client.getCurrentSeason()} />
+      <Header season={season} />
 
       <Box>
         {/* Drivers Panel */}
@@ -173,16 +184,7 @@ export const Dashboard: React.FC = () => {
         </Box>
       </Box>
 
-      <KeyBindings
-        bindings={[
-          { key: '←/→', description: 'switch panel' },
-          { key: '↑/↓', description: 'navigate' },
-          { key: 'enter', description: 'details' },
-          { key: 'R', description: 'races' },
-          { key: 'r', description: 'refresh' },
-          { key: 'q', description: 'quit' },
-        ]}
-      />
+      <KeyBindings bindings={KEY_BINDINGS} />
     </Box>
   );
 };

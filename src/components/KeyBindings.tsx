@@ -7,10 +7,10 @@ interface KeyBinding {
 }
 
 interface KeyBindingsProps {
-  bindings: KeyBinding[];
+  bindings: ReadonlyArray<KeyBinding>;
 }
 
-export const KeyBindings: React.FC<KeyBindingsProps> = ({ bindings }) => {
+export const KeyBindings = React.memo<KeyBindingsProps>(({ bindings }) => {
   return (
     <Box flexDirection="column" marginTop={1} paddingX={1}>
       <Box borderStyle="round" borderColor="gray" paddingX={2} paddingY={0}>
@@ -28,4 +28,6 @@ export const KeyBindings: React.FC<KeyBindingsProps> = ({ bindings }) => {
       </Box>
     </Box>
   );
-};
+});
+
+KeyBindings.displayName = 'KeyBindings';

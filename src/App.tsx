@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useApp, useInput } from 'ink';
 import { useAppStore } from './hooks/useAppStore.js';
 import { Dashboard } from './screens/Dashboard.js';
@@ -12,11 +12,11 @@ export const App: React.FC = () => {
   const currentScreen = useAppStore((state) => state.currentScreen);
 
   // Global quit handler
-  useInput((input) => {
+  useInput(useCallback((input) => {
     if (input === 'q' && currentScreen === 'dashboard') {
       exit();
     }
-  });
+  }, [currentScreen, exit]));
 
   switch (currentScreen) {
     case 'dashboard':

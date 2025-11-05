@@ -6,7 +6,7 @@ interface LoadingProps {
   message?: string;
 }
 
-export const Loading: React.FC<LoadingProps> = ({ message = 'Loading...' }) => {
+export const Loading = React.memo<LoadingProps>(({ message = 'Loading...' }) => {
   return (
     <Box flexDirection="column" alignItems="center" justifyContent="center" padding={2}>
       <Box marginBottom={1}>
@@ -23,4 +23,6 @@ export const Loading: React.FC<LoadingProps> = ({ message = 'Loading...' }) => {
       </Text>
     </Box>
   );
-};
+});
+
+Loading.displayName = 'Loading';
