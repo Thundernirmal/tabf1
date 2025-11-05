@@ -74,7 +74,7 @@ fi
 
 # Build executable
 echo -e "${YELLOW}🔨 Compiling executable...${NC}"
-bun build ./src/index.tsx \
+NODE_ENV=production bun build ./src/index.tsx \
     --compile \
     --target="$TARGET" \
     --outfile="$OUTPUT" \

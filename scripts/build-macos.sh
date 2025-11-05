@@ -27,7 +27,7 @@ fi
 
 # Build for Intel (x64)
 echo "🔨 Compiling for macOS Intel (x64)..."
-bun build ./src/index.tsx \
+NODE_ENV=production bun build ./src/index.tsx \
     --compile \
     --target=bun-darwin-x64 \
     --outfile="$BUILD_DIR/tabf1-macos-x64" \
@@ -43,7 +43,7 @@ echo ""
 
 # Build for Apple Silicon (arm64)
 echo "🔨 Compiling for macOS Apple Silicon (arm64)..."
-bun build ./src/index.tsx \
+NODE_ENV=production bun build ./src/index.tsx \
     --compile \
     --target=bun-darwin-arm64 \
     --outfile="$BUILD_DIR/tabf1-macos-arm64" \

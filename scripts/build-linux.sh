@@ -26,7 +26,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 echo "🔨 Compiling for Linux x64..."
-bun build ./src/index.tsx \
+NODE_ENV=production bun build ./src/index.tsx \
     --compile \
     --target=bun-linux-x64 \
     --outfile="$OUTPUT" \

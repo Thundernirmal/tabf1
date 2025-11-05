@@ -65,31 +65,35 @@ for i in "${!PLATFORMS[@]}"; do
     case "$PLATFORM" in
         linux-x64)
             OUTPUT="$BUILD_DIR/tabf1-linux-x64"
-            bun build ./src/index.tsx \
+            NODE_ENV=production bun build ./src/index.tsx \
                 --compile \
                 --target=bun-linux-x64 \
-                --outfile="$OUTPUT"
+                --outfile="$OUTPUT" \
+                --minify
             ;;
         darwin-x64)
             OUTPUT="$BUILD_DIR/tabf1-macos-x64"
-            bun build ./src/index.tsx \
+            NODE_ENV=production bun build ./src/index.tsx \
                 --compile \
                 --target=bun-darwin-x64 \
-                --outfile="$OUTPUT"
+                --outfile="$OUTPUT" \
+                --minify
             ;;
         darwin-arm64)
             OUTPUT="$BUILD_DIR/tabf1-macos-arm64"
-            bun build ./src/index.tsx \
+            NODE_ENV=production bun build ./src/index.tsx \
                 --compile \
                 --target=bun-darwin-arm64 \
-                --outfile="$OUTPUT"
+                --outfile="$OUTPUT" \
+                --minify
             ;;
         windows-x64)
             OUTPUT="$BUILD_DIR/tabf1-windows-x64.exe"
-            bun build ./src/index.tsx \
+            NODE_ENV=production bun build ./src/index.tsx \
                 --compile \
                 --target=bun-windows-x64 \
-                --outfile="$OUTPUT"
+                --outfile="$OUTPUT" \
+                --minify
             ;;
     esac
 
