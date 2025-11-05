@@ -1,0 +1,48 @@
+{
+  "name": "tabf1",
+  "version": "5.0.0",
+  "description": "🏎️ TabF1 - A beautiful Formula 1 Terminal Dashboard built with modern TypeScript",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tabf1": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.tsx",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "f1",
+    "formula1",
+    "terminal",
+    "dashboard",
+    "cli",
+    "racing"
+  ],
+  "author": "TabF1",
+  "license": "MIT",
+  "dependencies": {
+    "ink": "^5.0.1",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "ink-select-input": "^6.0.0",
+    "ink-table": "^3.1.0",
+    "react": "^18.3.1",
+    "chalk": "^5.3.0",
+    "date-fns": "^4.1.0",
+    "zustand": "^5.0.2",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
