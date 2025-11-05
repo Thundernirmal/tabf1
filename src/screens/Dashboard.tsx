@@ -144,39 +144,20 @@ export const Dashboard: React.FC = () => {
     <Box flexDirection="column">
       <Header season={season} />
 
-      <Box>
+      <Box flexDirection="column">
         {/* Drivers Panel */}
-        <Box
-          flexDirection="column"
-          borderStyle="round"
-          borderColor={focusPanel === 'drivers' ? 'cyan' : 'gray'}
-          paddingX={1}
-          paddingY={0}
-          marginRight={1}
-          width="50%"
-        >
-          <Box justifyContent="center" marginBottom={1}>
-            <Text color="cyan" bold>
-              🏎️  DRIVER STANDINGS
-            </Text>
-          </Box>
+        <Box flexDirection="column" marginBottom={1}>
+          <Text color="cyan" bold>
+            {focusPanel === 'drivers' ? '▶ ' : '  '}🏎️  DRIVER STANDINGS
+          </Text>
           <DriverTable standings={driverStandings} selectedIndex={selectedDriverIndex} />
         </Box>
 
         {/* Constructors Panel */}
-        <Box
-          flexDirection="column"
-          borderStyle="round"
-          borderColor={focusPanel === 'constructors' ? 'magenta' : 'gray'}
-          paddingX={1}
-          paddingY={0}
-          width="50%"
-        >
-          <Box justifyContent="center" marginBottom={1}>
-            <Text color="magenta" bold>
-              🏁  CONSTRUCTOR STANDINGS
-            </Text>
-          </Box>
+        <Box flexDirection="column">
+          <Text color="magenta" bold>
+            {focusPanel === 'constructors' ? '▶ ' : '  '}🏁  CONSTRUCTOR STANDINGS
+          </Text>
           <ConstructorTable
             standings={constructorStandings}
             selectedIndex={selectedConstructorIndex}

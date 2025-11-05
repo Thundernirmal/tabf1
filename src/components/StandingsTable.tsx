@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { stylePosition, stylePoints, formatDriverName, formatTeamName } from '../themes/tokyo-night.js';
+import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import type { DriverStanding, ConstructorStanding } from '../types/f1.js';
 
 interface DriverTableProps {
@@ -13,158 +13,106 @@ interface ConstructorTableProps {
   selectedIndex: number;
 }
 
-export const DriverTable: React.FC<DriverTableProps> = ({ standings, selectedIndex }) => {
+const padEnd = (str: string, length: number): string => {
+  const cleaned = str.replace(/\x1b\[[0-9;]*m/g, '');
+  const padLength = Math.max(0, length - cleaned.length);
+  return str + ' '.repeat(padLength);
+};
+
+const padStart = (str: string, length: number): string => {
+  const cleaned = str.replace(/\x1b\[[0-9;]*m/g, '');
+  const padLength = Math.max(0, length - cleaned.length);
+  return ' '.repeat(padLength) + str;
+};
+
+export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIndex }) => {
   return (
     <Box flexDirection="column" paddingX={1}>
-      {/* Header */}
-      <Box>
-        <Box width={5}>
-          <Text color="cyan" bold>
-            Pos
-          </Text>
-        </Box>
-        <Box width={25}>
-          <Text color="cyan" bold>
-            Driver
-          </Text>
-        </Box>
-        <Box width={25}>
-          <Text color="cyan" bold>
-            Team
-          </Text>
-        </Box>
-        <Box width={8}>
-          <Text color="cyan" bold>
-            Points
-          </Text>
-        </Box>
-        <Box width={6}>
-          <Text color="cyan" bold>
-            Wins
-          </Text>
-        </Box>
-      </Box>
-
-      {/* Divider */}
-      <Box>
-        <Text color="gray" dimColor>
-          {'─'.repeat(69)}
+      <Box flexDirection="column">
+        {/* Header */}
+        <Text color="cyan" bold>
+          Pos  Driver                Team                      Pts  Wins
         </Text>
-      </Box>
 
-      {/* Rows */}
-      {standings.map((standing, index) => {
-        const isSelected = index === selectedIndex;
+        {/* Divider */}
+        <Text color="gray" dimColor>
+          ───────────────────────────────────────────────────────────
+        </Text>
 
-        return (
-          <Box key={standing.Driver.driverId}>
-            <Box width={5}>
-              <Text>{stylePosition(standing.position)}</Text>
-            </Box>
-            <Box width={25}>
+        {/* Rows */}
+        {standings.map((standing, index) => {
+          const isSelected = index === selectedIndex;
+          const driver = standing.Driver.code || standing.Driver.familyName.substring(0, 3).toUpperCase();
+          const team = (standing.Constructors[0]?.name || 'N/A').substring(0, 23);
+
+          return (
+            <Box key={standing.Driver.driverId}>
               <Text>
-                {formatDriverName(
-                  standing.Driver.givenName,
-                  standing.Driver.familyName,
-                  standing.Driver.code
-                )}
+                {padEnd(stylePosition(standing.position), 5)}
+                {padEnd(driver, 22)}
+                <Text color="magenta">{padEnd(team, 26)}</Text>
+                {padStart(stylePoints(standing.points), 5)}
+                <Text color="yellow">{padStart(standing.wins, 5)}</Text>
+                {isSelected && <Text color="cyan" bold> ←</Text>}
               </Text>
             </Box>
-            <Box width={25}>
-              <Text color="magenta">{standing.Constructors[0]?.name || 'N/A'}</Text>
-            </Box>
-            <Box width={8}>
-              <Text>{stylePoints(standing.points)}</Text>
-            </Box>
-            <Box width={6}>
-              <Text color="yellow">{standing.wins}</Text>
-            </Box>
-            {isSelected && (
-              <Text color="cyan" bold>
-                {' ← '}
-              </Text>
-            )}
-          </Box>
-        );
-      })}
+          );
+        })}
 
-      {/* Footer */}
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          {standings.length} drivers
-        </Text>
+        {/* Footer */}
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            {standings.length} drivers
+          </Text>
+        </Box>
       </Box>
     </Box>
   );
-};
+});
 
-export const ConstructorTable: React.FC<ConstructorTableProps> = ({ standings, selectedIndex }) => {
+DriverTable.displayName = 'DriverTable';
+
+export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, selectedIndex }) => {
   return (
     <Box flexDirection="column" paddingX={1}>
-      {/* Header */}
-      <Box>
-        <Box width={5}>
-          <Text color="magenta" bold>
-            Pos
-          </Text>
-        </Box>
-        <Box width={30}>
-          <Text color="magenta" bold>
-            Constructor
-          </Text>
-        </Box>
-        <Box width={8}>
-          <Text color="magenta" bold>
-            Points
-          </Text>
-        </Box>
-        <Box width={6}>
-          <Text color="magenta" bold>
-            Wins
-          </Text>
-        </Box>
-      </Box>
-
-      {/* Divider */}
-      <Box>
-        <Text color="gray" dimColor>
-          {'─'.repeat(49)}
+      <Box flexDirection="column">
+        {/* Header */}
+        <Text color="magenta" bold>
+          Pos  Constructor                    Pts  Wins
         </Text>
-      </Box>
 
-      {/* Rows */}
-      {standings.map((standing, index) => {
-        const isSelected = index === selectedIndex;
+        {/* Divider */}
+        <Text color="gray" dimColor>
+          ─────────────────────────────────────────────
+        </Text>
 
-        return (
-          <Box key={standing.Constructor.constructorId}>
-            <Box width={5}>
-              <Text>{stylePosition(standing.position)}</Text>
-            </Box>
-            <Box width={30}>
-              <Text>{formatTeamName(standing.Constructor.name)}</Text>
-            </Box>
-            <Box width={8}>
-              <Text>{stylePoints(standing.points)}</Text>
-            </Box>
-            <Box width={6}>
-              <Text color="yellow">{standing.wins}</Text>
-            </Box>
-            {isSelected && (
-              <Text color="cyan" bold>
-                {' ← '}
+        {/* Rows */}
+        {standings.map((standing, index) => {
+          const isSelected = index === selectedIndex;
+          const teamName = standing.Constructor.name.substring(0, 28);
+
+          return (
+            <Box key={standing.Constructor.constructorId}>
+              <Text>
+                {padEnd(stylePosition(standing.position), 5)}
+                <Text color="magenta">{padEnd(teamName, 31)}</Text>
+                {padStart(stylePoints(standing.points), 5)}
+                <Text color="yellow">{padStart(standing.wins, 5)}</Text>
+                {isSelected && <Text color="cyan" bold> ←</Text>}
               </Text>
-            )}
-          </Box>
-        );
-      })}
+            </Box>
+          );
+        })}
 
-      {/* Footer */}
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          {standings.length} constructors
-        </Text>
+        {/* Footer */}
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            {standings.length} constructors
+          </Text>
+        </Box>
       </Box>
     </Box>
   );
-};
+});
+
+ConstructorTable.displayName = 'ConstructorTable';
