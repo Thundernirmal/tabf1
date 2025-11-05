@@ -1,5 +1,0 @@
-# Minimal pinned requirements for TabF1
-# Pin exact versions to ensure pip installs a compatible set.
-# Adjust versions if you need newer Textual features or a different Python version.
-requests==2.32.3
-textual==6.1.0

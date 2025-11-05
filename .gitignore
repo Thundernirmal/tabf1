@@ -1,11 +1,6 @@
 # Ignore AI instructions file
 .github/copilot-instructions.md
 
-# Ignore Python cache files
-__pycache__/
-target
-Cargo.lock
-
 # Node.js / TypeScript / Bun
 node_modules/
 dist/
