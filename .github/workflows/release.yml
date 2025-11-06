@@ -1,0 +1,86 @@
+name: Build and Release Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: bun-linux-x64
+            output: tabf1-linux-x64
+          - os: macos-13
+            target: bun-darwin-x64
+            output: tabf1-macos-x64
+          - os: macos-14
+            target: bun-darwin-arm64
+            output: tabf1-macos-arm64
+          - os: windows-latest
+            target: bun-windows-x64
+            output: tabf1-windows-x64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build executable
+        run: |
+          mkdir -p build
+          bun build ./src/index.tsx --compile --target=${{ matrix.target }} --outfile=build/${{ matrix.output }} --minify
+        env:
+          NODE_ENV: production
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: build/${{ matrix.output }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/tabf1-linux-x64/tabf1-linux-x64
+            artifacts/tabf1-macos-x64/tabf1-macos-x64
+            artifacts/tabf1-macos-arm64/tabf1-macos-arm64
+            artifacts/tabf1-windows-x64.exe/tabf1-windows-x64.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
