@@ -22,7 +22,7 @@ export const Header = React.memo<HeaderProps>(({ season }) => {
         </Text>
       </Box>
       <Box justifyContent="center" marginTop={0}>
-        <Text color="yellow" dimColor>
+        <Text color="#e0af68">
           {season ? `${season} Season` : 'Live Standings & Results'}
         </Text>
       </Box>

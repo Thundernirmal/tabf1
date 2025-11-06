@@ -10,16 +10,16 @@ export const Loading = React.memo<LoadingProps>(({ message = 'Loading...' }) => 
   return (
     <Box flexDirection="column" alignItems="center" justifyContent="center" padding={2}>
       <Box marginBottom={1}>
-        <Text color="cyan">
+        <Text color="#7dcfff">
           <Spinner type="dots" />
         </Text>
-        <Text color="cyan" bold>
+        <Text color="#7dcfff" bold>
           {' '}
           {message}
         </Text>
       </Box>
-      <Text color="gray" dimColor>
-        Loading data...
+      <Text color="#9aa5ce">
+        Please wait...
       </Text>
     </Box>
   );

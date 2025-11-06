@@ -13,14 +13,14 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
       justifyContent="center"
       padding={2}
       borderStyle="round"
-      borderColor="red"
+      borderColor="#f7768e"
     >
-      <Text color="red" bold>
-        ❌ Error
+      <Text color="#f7768e" bold>
+        Error
       </Text>
-      <Text color="red">{message}</Text>
+      <Text color="#f7768e">{message}</Text>
       <Box marginTop={1}>
-        <Text color="gray" dimColor>
+        <Text color="#9aa5ce">
           Press 'r' to retry or 'q' to quit
         </Text>
       </Box>

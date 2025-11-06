@@ -8,6 +8,7 @@ import { f1Client } from '../api/f1-client.js';
 import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import { formatRaceTime, formatStatus, formatDate } from '../utils/formatters.js';
+import { getRaceDetailWidths, formatDriverName, formatTeamName, truncateText } from '../utils/responsive.js';
 import type { Race } from '../types/f1.js';
 
 export const RaceDetail: React.FC = () => {
@@ -88,6 +89,8 @@ export const RaceDetail: React.FC = () => {
     );
   }
 
+  const widths = getRaceDetailWidths();
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -106,7 +109,7 @@ export const RaceDetail: React.FC = () => {
           </Text>
         </Box>
         <Box justifyContent="center" marginBottom={1}>
-          <Text color="gray" dimColor>
+          <Text color="#9aa5ce">
             {race.Circuit.circuitName} • {formatDate(race.date, race.time)}
           </Text>
         </Box>
@@ -114,32 +117,32 @@ export const RaceDetail: React.FC = () => {
         <Box flexDirection="column" paddingX={1}>
           {/* Header */}
           <Box>
-            <Box width={5}>
+            <Box width={widths.position}>
               <Text color="cyan" bold>
                 Pos
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={widths.driver}>
               <Text color="cyan" bold>
                 Driver
               </Text>
             </Box>
-            <Box width={25}>
+            <Box width={widths.team}>
               <Text color="cyan" bold>
                 Team
               </Text>
             </Box>
-            <Box width={6}>
+            <Box width={widths.grid}>
               <Text color="cyan" bold>
                 Grid
               </Text>
             </Box>
-            <Box width={15}>
+            <Box width={widths.timeStatus}>
               <Text color="cyan" bold>
                 Time/Status
               </Text>
             </Box>
-            <Box width={7}>
+            <Box width={widths.points}>
               <Text color="cyan" bold>
                 Points
               </Text>
@@ -148,42 +151,52 @@ export const RaceDetail: React.FC = () => {
 
           {/* Divider */}
           <Box>
-            <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+            <Text color="#7aa2f7">
+              {'─'.repeat(widths.total)}
             </Text>
           </Box>
 
           {/* Results */}
-          {race.Results.map((result) => (
-            <Box key={result.position}>
-              <Box width={5}>
-                <Text>{stylePosition(result.position)}</Text>
+          {race.Results.map((result) => {
+            const driverName = formatDriverName(
+              result.Driver.givenName,
+              result.Driver.familyName,
+              result.Driver.code,
+              widths.driver
+            );
+            const teamName = formatTeamName(result.Constructor.name, widths.team);
+            const timeOrStatus = result.Time
+              ? formatRaceTime(result.Time.time)
+              : formatStatus(result.status);
+            const displayTimeStatus = truncateText(timeOrStatus, widths.timeStatus);
+
+            return (
+              <Box key={result.position}>
+                <Box width={widths.position}>
+                  <Text>{stylePosition(result.position)}</Text>
+                </Box>
+                <Box width={widths.driver}>
+                  <Text color="#c0caf5">{driverName}</Text>
+                </Box>
+                <Box width={widths.team}>
+                  <Text color="#bb9af7">{teamName}</Text>
+                </Box>
+                <Box width={widths.grid}>
+                  <Text color="#9aa5ce">{result.grid}</Text>
+                </Box>
+                <Box width={widths.timeStatus}>
+                  <Text color="#9aa5ce">{displayTimeStatus}</Text>
+                </Box>
+                <Box width={widths.points}>
+                  <Text>{stylePoints(result.points)}</Text>
+                </Box>
               </Box>
-              <Box width={20}>
-                <Text color="white">
-                  {result.Driver.code || result.Driver.familyName}
-                </Text>
-              </Box>
-              <Box width={25}>
-                <Text color="magenta">{result.Constructor.name}</Text>
-              </Box>
-              <Box width={6}>
-                <Text color="gray">{result.grid}</Text>
-              </Box>
-              <Box width={15}>
-                <Text color="gray">
-                  {result.Time ? formatRaceTime(result.Time.time) : formatStatus(result.status)}
-                </Text>
-              </Box>
-              <Box width={7}>
-                <Text>{stylePoints(result.points)}</Text>
-              </Box>
-            </Box>
-          ))}
+            );
+          })}
 
           {/* Footer */}
           <Box marginTop={1}>
-            <Text color="gray" dimColor>
+            <Text color="#9aa5ce">
               {race.Results.length} classified finishers
             </Text>
           </Box>

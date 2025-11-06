@@ -13,13 +13,13 @@ interface KeyBindingsProps {
 export const KeyBindings = React.memo<KeyBindingsProps>(({ bindings }) => {
   return (
     <Box flexDirection="column" marginTop={1} paddingX={1}>
-      <Box borderStyle="round" borderColor="gray" paddingX={2} paddingY={0}>
+      <Box borderStyle="round" borderColor="#7aa2f7" paddingX={2} paddingY={0}>
         {bindings.map((binding, index) => (
           <Box key={index} marginRight={2}>
-            <Text color="cyan" bold>
+            <Text color="#7dcfff" bold>
               {binding.key}
             </Text>
-            <Text color="gray" dimColor>
+            <Text color="#9aa5ce">
               {' '}
               {binding.description}
             </Text>

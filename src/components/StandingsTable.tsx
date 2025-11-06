@@ -1,6 +1,12 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { DriverStanding, ConstructorStanding } from '../types/f1.js';
+import {
+  getDriverTableWidths,
+  getConstructorTableWidths,
+  formatDriverName,
+  formatTeamName,
+} from '../utils/responsive.js';
 
 interface DriverTableProps {
   standings: DriverStanding[];
@@ -34,19 +40,21 @@ const padStart = (str: string | number, length: number): string => {
 };
 
 export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIndex }) => {
+  const widths = getDriverTableWidths();
+
   return (
     <Box flexDirection="column">
       {/* Header */}
       <Box>
         <Text color="cyan" bold>
-          {padEnd('Pos', 4)} {padEnd('Driver', 20)} {padEnd('Team', 25)} {padStart('Pts', 6)} {padStart('Wins', 6)}
+          {padEnd('Pos', widths.position)} {padEnd('Driver', widths.driver)} {padEnd('Team', widths.team)} {padStart('Pts', widths.points)} {padStart('Wins', widths.wins)}
         </Text>
       </Box>
 
       {/* Divider */}
       <Box>
-        <Text color="gray" dimColor>
-          {'─'.repeat(65)}
+        <Text color="#7aa2f7">
+          {'─'.repeat(widths.total)}
         </Text>
       </Box>
 
@@ -54,34 +62,37 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
       {standings.map((standing, index) => {
         const isSelected = index === selectedIndex;
         const position = standing.position;
-        const driverCode = standing.Driver.code || standing.Driver.familyName.substring(0, 3).toUpperCase();
-        const driverName = `${standing.Driver.givenName} ${standing.Driver.familyName}`;
-        const displayDriver = driverCode.length <= 3 ? driverCode : driverName.substring(0, 18);
+        const displayDriver = formatDriverName(
+          standing.Driver.givenName,
+          standing.Driver.familyName,
+          standing.Driver.code,
+          widths.driver
+        );
         const teamName = standing.Constructors[0]?.name || 'N/A';
-        const displayTeam = teamName.length > 23 ? teamName.substring(0, 23) : teamName;
+        const displayTeam = formatTeamName(teamName, widths.team);
         const points = standing.points;
         const wins = standing.wins;
 
         return (
           <Box key={standing.Driver.driverId}>
             <Text>
-              <Text color={position === '1' ? 'yellow' : position === '2' ? 'gray' : position === '3' ? '#cd7f32' : 'white'} bold={parseInt(position) <= 3}>
-                {padEnd(position, 4)}
+              <Text color={position === '1' ? '#ffd700' : position === '2' ? '#c0c0c0' : position === '3' ? '#ff9e64' : '#c0caf5'} bold={parseInt(position) <= 3}>
+                {padEnd(position, widths.position)}
               </Text>
-              <Text color="cyan">
-                {padEnd(displayDriver, 20)}
+              <Text color="#7dcfff">
+                {padEnd(displayDriver, widths.driver)}
               </Text>
-              <Text color="magenta">
-                {padEnd(displayTeam, 25)}
+              <Text color="#bb9af7">
+                {padEnd(displayTeam, widths.team)}
               </Text>
-              <Text color="green" bold>
-                {padStart(points, 6)}
+              <Text color="#9ece6a" bold>
+                {padStart(points, widths.points)}
               </Text>
-              <Text color="yellow">
-                {padStart(wins, 6)}
+              <Text color="#e0af68">
+                {padStart(wins, widths.wins)}
               </Text>
               {isSelected && (
-                <Text color="cyan" bold> ← </Text>
+                <Text color="#7dcfff" bold> ← </Text>
               )}
             </Text>
           </Box>
@@ -90,7 +101,7 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
 
       {/* Footer */}
       <Box marginTop={1}>
-        <Text color="gray" dimColor>
+        <Text color="#9aa5ce">
           Total: {standings.length} drivers
         </Text>
       </Box>
@@ -101,19 +112,21 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
 DriverTable.displayName = 'DriverTable';
 
 export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, selectedIndex }) => {
+  const widths = getConstructorTableWidths();
+
   return (
     <Box flexDirection="column">
       {/* Header */}
       <Box>
         <Text color="magenta" bold>
-          {padEnd('Pos', 4)} {padEnd('Constructor', 35)} {padStart('Pts', 6)} {padStart('Wins', 6)}
+          {padEnd('Pos', widths.position)} {padEnd('Constructor', widths.constructor)} {padStart('Pts', widths.points)} {padStart('Wins', widths.wins)}
         </Text>
       </Box>
 
       {/* Divider */}
       <Box>
-        <Text color="gray" dimColor>
-          {'─'.repeat(55)}
+        <Text color="#7aa2f7">
+          {'─'.repeat(widths.total)}
         </Text>
       </Box>
 
@@ -122,27 +135,27 @@ export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, 
         const isSelected = index === selectedIndex;
         const position = standing.position;
         const teamName = standing.Constructor.name;
-        const displayTeam = teamName.length > 33 ? teamName.substring(0, 33) : teamName;
+        const displayTeam = formatTeamName(teamName, widths.constructor);
         const points = standing.points;
         const wins = standing.wins;
 
         return (
           <Box key={standing.Constructor.constructorId}>
             <Text>
-              <Text color={position === '1' ? 'yellow' : position === '2' ? 'gray' : position === '3' ? '#cd7f32' : 'white'} bold={parseInt(position) <= 3}>
-                {padEnd(position, 4)}
+              <Text color={position === '1' ? '#ffd700' : position === '2' ? '#c0c0c0' : position === '3' ? '#ff9e64' : '#c0caf5'} bold={parseInt(position) <= 3}>
+                {padEnd(position, widths.position)}
               </Text>
-              <Text color="magenta" bold>
-                {padEnd(displayTeam, 35)}
+              <Text color="#bb9af7" bold>
+                {padEnd(displayTeam, widths.constructor)}
               </Text>
-              <Text color="green" bold>
-                {padStart(points, 6)}
+              <Text color="#9ece6a" bold>
+                {padStart(points, widths.points)}
               </Text>
-              <Text color="yellow">
-                {padStart(wins, 6)}
+              <Text color="#e0af68">
+                {padStart(wins, widths.wins)}
               </Text>
               {isSelected && (
-                <Text color="cyan" bold> ← </Text>
+                <Text color="#7dcfff" bold> ← </Text>
               )}
             </Text>
           </Box>
@@ -151,7 +164,7 @@ export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, 
 
       {/* Footer */}
       <Box marginTop={1}>
-        <Text color="gray" dimColor>
+        <Text color="#9aa5ce">
           Total: {standings.length} constructors
         </Text>
       </Box>

@@ -7,6 +7,7 @@ import { ErrorMessage } from '../components/ErrorMessage.js';
 import { f1Client } from '../api/f1-client.js';
 import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
+import { getConstructorDetailWidths, formatDriverName, truncateText } from '../utils/responsive.js';
 import type { ConstructorLastResult } from '../types/f1.js';
 
 export const ConstructorDetail: React.FC = () => {
@@ -69,6 +70,8 @@ export const ConstructorDetail: React.FC = () => {
     );
   }
 
+  const widths = getConstructorDetailWidths();
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -90,32 +93,32 @@ export const ConstructorDetail: React.FC = () => {
         <Box flexDirection="column" paddingX={1}>
           {/* Header */}
           <Box>
-            <Box width={6}>
+            <Box width={widths.round}>
               <Text color="magenta" bold>
                 Round
               </Text>
             </Box>
-            <Box width={30}>
+            <Box width={widths.grandPrix}>
               <Text color="magenta" bold>
                 Grand Prix
               </Text>
             </Box>
-            <Box width={6}>
+            <Box width={widths.carNumber}>
               <Text color="magenta" bold>
                 Car #
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={widths.driver}>
               <Text color="magenta" bold>
                 Driver
               </Text>
             </Box>
-            <Box width={8}>
+            <Box width={widths.finish}>
               <Text color="magenta" bold>
                 Finish
               </Text>
             </Box>
-            <Box width={8}>
+            <Box width={widths.points}>
               <Text color="magenta" bold>
                 Points
               </Text>
@@ -124,45 +127,53 @@ export const ConstructorDetail: React.FC = () => {
 
           {/* Divider */}
           <Box>
-            <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+            <Text color="#7aa2f7">
+              {'─'.repeat(widths.total)}
             </Text>
           </Box>
 
           {/* Results */}
           {results.flatMap((race) =>
-            race.Results.map((result, idx) => (
-              <Box key={`${race.round}-${idx}`}>
-                <Box width={6}>
-                  <Text color="yellow">{race.round}</Text>
+            race.Results.map((result, idx) => {
+              const raceName = truncateText(race.raceName.replace(' Grand Prix', ' GP'), widths.grandPrix);
+              const driverName = formatDriverName(
+                result.Driver.givenName,
+                result.Driver.familyName,
+                result.Driver.code,
+                widths.driver
+              );
+
+              return (
+                <Box key={`${race.round}-${idx}`}>
+                  <Box width={widths.round}>
+                    <Text color="#e0af68">{race.round}</Text>
+                  </Box>
+                  <Box width={widths.grandPrix}>
+                    <Text color="#c0caf5">{raceName}</Text>
+                  </Box>
+                  <Box width={widths.carNumber}>
+                    <Text color="#9aa5ce">{result.number}</Text>
+                  </Box>
+                  <Box width={widths.driver}>
+                    <Text color="#7dcfff">{driverName}</Text>
+                  </Box>
+                  <Box width={widths.finish}>
+                    <Text>{stylePosition(result.position)}</Text>
+                  </Box>
+                  <Box width={widths.points}>
+                    <Text>{stylePoints(result.points)}</Text>
+                  </Box>
                 </Box>
-                <Box width={30}>
-                  <Text color="white">{race.raceName.replace(' Grand Prix', ' GP')}</Text>
-                </Box>
-                <Box width={6}>
-                  <Text color="gray">{result.number}</Text>
-                </Box>
-                <Box width={20}>
-                  <Text color="cyan">
-                    {result.Driver.code || result.Driver.familyName}
-                  </Text>
-                </Box>
-                <Box width={8}>
-                  <Text>{stylePosition(result.position)}</Text>
-                </Box>
-                <Box width={8}>
-                  <Text>{stylePoints(result.points)}</Text>
-                </Box>
-              </Box>
-            ))
+              );
+            })
           )}
 
           {/* Summary */}
           <Box marginTop={1}>
-            <Text color="gray" dimColor>
+            <Text color="#9aa5ce">
               Total Points:{' '}
             </Text>
-            <Text color="green" bold>
+            <Text color="#9ece6a" bold>
               {results.reduce(
                 (sum, race) =>
                   sum + race.Results.reduce((raceSum, r) => raceSum + parseFloat(r.points), 0),

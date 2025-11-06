@@ -8,6 +8,7 @@ import { f1Client } from '../api/f1-client.js';
 import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import { formatStatus } from '../utils/formatters.js';
+import { getDriverDetailWidths, truncateText } from '../utils/responsive.js';
 import type { DriverLastResult } from '../types/f1.js';
 
 export const DriverDetail: React.FC = () => {
@@ -70,6 +71,8 @@ export const DriverDetail: React.FC = () => {
     );
   }
 
+  const widths = getDriverDetailWidths();
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -91,32 +94,32 @@ export const DriverDetail: React.FC = () => {
         <Box flexDirection="column" paddingX={1}>
           {/* Header */}
           <Box>
-            <Box width={6}>
+            <Box width={widths.round}>
               <Text color="cyan" bold>
                 Round
               </Text>
             </Box>
-            <Box width={30}>
+            <Box width={widths.grandPrix}>
               <Text color="cyan" bold>
                 Grand Prix
               </Text>
             </Box>
-            <Box width={6}>
+            <Box width={widths.grid}>
               <Text color="cyan" bold>
                 Grid
               </Text>
             </Box>
-            <Box width={8}>
+            <Box width={widths.finish}>
               <Text color="cyan" bold>
                 Finish
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={widths.status}>
               <Text color="cyan" bold>
                 Status
               </Text>
             </Box>
-            <Box width={8}>
+            <Box width={widths.points}>
               <Text color="cyan" bold>
                 Points
               </Text>
@@ -125,32 +128,35 @@ export const DriverDetail: React.FC = () => {
 
           {/* Divider */}
           <Box>
-            <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+            <Text color="#7aa2f7">
+              {'─'.repeat(widths.total)}
             </Text>
           </Box>
 
           {/* Results */}
           {results.map((race) => {
             const result = race.Results[0];
+            const raceName = truncateText(race.raceName.replace(' Grand Prix', ' GP'), widths.grandPrix);
+            const status = truncateText(formatStatus(result.status), widths.status);
+
             return (
               <Box key={race.round}>
-                <Box width={6}>
-                  <Text color="yellow">{race.round}</Text>
+                <Box width={widths.round}>
+                  <Text color="#e0af68">{race.round}</Text>
                 </Box>
-                <Box width={30}>
-                  <Text color="white">{race.raceName.replace(' Grand Prix', ' GP')}</Text>
+                <Box width={widths.grandPrix}>
+                  <Text color="#c0caf5">{raceName}</Text>
                 </Box>
-                <Box width={6}>
-                  <Text color="gray">{result.grid}</Text>
+                <Box width={widths.grid}>
+                  <Text color="#9aa5ce">{result.grid}</Text>
                 </Box>
-                <Box width={8}>
+                <Box width={widths.finish}>
                   <Text>{stylePosition(result.position)}</Text>
                 </Box>
-                <Box width={20}>
-                  <Text color="gray">{formatStatus(result.status)}</Text>
+                <Box width={widths.status}>
+                  <Text color="#9aa5ce">{status}</Text>
                 </Box>
-                <Box width={8}>
+                <Box width={widths.points}>
                   <Text>{stylePoints(result.points)}</Text>
                 </Box>
               </Box>
@@ -159,10 +165,10 @@ export const DriverDetail: React.FC = () => {
 
           {/* Summary */}
           <Box marginTop={1}>
-            <Text color="gray" dimColor>
+            <Text color="#9aa5ce">
               Total Points:{' '}
             </Text>
-            <Text color="green" bold>
+            <Text color="#9ece6a" bold>
               {results.reduce((sum, race) => sum + parseFloat(race.Results[0].points), 0)}
             </Text>
           </Box>
