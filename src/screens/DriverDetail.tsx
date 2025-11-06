@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -9,6 +9,11 @@ import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import { formatStatus } from '../utils/formatters.js';
 import type { DriverLastResult } from '../types/f1.js';
+import {
+  getRaceNameWidth,
+  formatRaceName,
+  getTerminalSizeCategory
+} from '../utils/responsive.js';
 
 export const DriverDetail: React.FC = () => {
   const [results, setResults] = useState<DriverLastResult[]>([]);
@@ -70,6 +75,22 @@ export const DriverDetail: React.FC = () => {
     );
   }
 
+  // Calculate responsive column widths based on terminal size
+  const { raceNameWidth, statusWidth, totalWidth } = useMemo(() => {
+    const sizeCategory = getTerminalSizeCategory();
+    const raceW = getRaceNameWidth();
+
+    // Responsive widths
+    const statusW = sizeCategory === 'small' ? 12 : sizeCategory === 'medium' ? 15 : 20;
+    const total = 6 + 1 + raceW + 1 + 6 + 1 + 8 + 1 + statusW + 1 + 8;
+
+    return {
+      raceNameWidth: raceW,
+      statusWidth: statusW,
+      totalWidth: total,
+    };
+  }, []);
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -96,7 +117,7 @@ export const DriverDetail: React.FC = () => {
                 Round
               </Text>
             </Box>
-            <Box width={30}>
+            <Box width={raceNameWidth}>
               <Text color="cyan" bold>
                 Grand Prix
               </Text>
@@ -111,7 +132,7 @@ export const DriverDetail: React.FC = () => {
                 Finish
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={statusWidth}>
               <Text color="cyan" bold>
                 Status
               </Text>
@@ -126,20 +147,26 @@ export const DriverDetail: React.FC = () => {
           {/* Divider */}
           <Box>
             <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+              {'─'.repeat(totalWidth)}
             </Text>
           </Box>
 
           {/* Results */}
           {results.map((race) => {
             const result = race.Results[0];
+            const displayRaceName = formatRaceName(race.raceName, raceNameWidth);
+            const displayStatus = formatStatus(result.status);
+            const truncatedStatus = displayStatus.length > statusWidth
+              ? displayStatus.substring(0, statusWidth - 1) + '…'
+              : displayStatus;
+
             return (
               <Box key={race.round}>
                 <Box width={6}>
                   <Text color="yellow">{race.round}</Text>
                 </Box>
-                <Box width={30}>
-                  <Text color="white">{race.raceName.replace(' Grand Prix', ' GP')}</Text>
+                <Box width={raceNameWidth}>
+                  <Text color="white">{displayRaceName}</Text>
                 </Box>
                 <Box width={6}>
                   <Text color="gray">{result.grid}</Text>
@@ -147,8 +174,8 @@ export const DriverDetail: React.FC = () => {
                 <Box width={8}>
                   <Text>{stylePosition(result.position)}</Text>
                 </Box>
-                <Box width={20}>
-                  <Text color="gray">{formatStatus(result.status)}</Text>
+                <Box width={statusWidth}>
+                  <Text color="gray">{truncatedStatus}</Text>
                 </Box>
                 <Box width={8}>
                   <Text>{stylePoints(result.points)}</Text>

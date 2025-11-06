@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -8,6 +8,12 @@ import { f1Client } from '../api/f1-client.js';
 import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import type { ConstructorLastResult } from '../types/f1.js';
+import {
+  getRaceNameWidth,
+  getDriverNameWidth,
+  formatRaceName,
+  formatDriverName
+} from '../utils/responsive.js';
 
 export const ConstructorDetail: React.FC = () => {
   const [results, setResults] = useState<ConstructorLastResult[]>([]);
@@ -69,6 +75,21 @@ export const ConstructorDetail: React.FC = () => {
     );
   }
 
+  // Calculate responsive column widths based on terminal size
+  const { raceNameWidth, driverWidth, totalWidth } = useMemo(() => {
+    const raceW = getRaceNameWidth();
+    const driverW = getDriverNameWidth();
+
+    // Responsive widths
+    const total = 6 + 1 + raceW + 1 + 6 + 1 + driverW + 1 + 8 + 1 + 8;
+
+    return {
+      raceNameWidth: raceW,
+      driverWidth: driverW,
+      totalWidth: total,
+    };
+  }, []);
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -95,7 +116,7 @@ export const ConstructorDetail: React.FC = () => {
                 Round
               </Text>
             </Box>
-            <Box width={30}>
+            <Box width={raceNameWidth}>
               <Text color="magenta" bold>
                 Grand Prix
               </Text>
@@ -105,7 +126,7 @@ export const ConstructorDetail: React.FC = () => {
                 Car #
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={driverWidth}>
               <Text color="magenta" bold>
                 Driver
               </Text>
@@ -125,36 +146,43 @@ export const ConstructorDetail: React.FC = () => {
           {/* Divider */}
           <Box>
             <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+              {'─'.repeat(totalWidth)}
             </Text>
           </Box>
 
           {/* Results */}
           {results.flatMap((race) =>
-            race.Results.map((result, idx) => (
-              <Box key={`${race.round}-${idx}`}>
-                <Box width={6}>
-                  <Text color="yellow">{race.round}</Text>
+            race.Results.map((result, idx) => {
+              const displayRaceName = formatRaceName(race.raceName, raceNameWidth);
+              const displayDriver = formatDriverName(
+                result.Driver.givenName,
+                result.Driver.familyName,
+                result.Driver.code
+              );
+
+              return (
+                <Box key={`${race.round}-${idx}`}>
+                  <Box width={6}>
+                    <Text color="yellow">{race.round}</Text>
+                  </Box>
+                  <Box width={raceNameWidth}>
+                    <Text color="white">{displayRaceName}</Text>
+                  </Box>
+                  <Box width={6}>
+                    <Text color="gray">{result.number}</Text>
+                  </Box>
+                  <Box width={driverWidth}>
+                    <Text color="cyan">{displayDriver}</Text>
+                  </Box>
+                  <Box width={8}>
+                    <Text>{stylePosition(result.position)}</Text>
+                  </Box>
+                  <Box width={8}>
+                    <Text>{stylePoints(result.points)}</Text>
+                  </Box>
                 </Box>
-                <Box width={30}>
-                  <Text color="white">{race.raceName.replace(' Grand Prix', ' GP')}</Text>
-                </Box>
-                <Box width={6}>
-                  <Text color="gray">{result.number}</Text>
-                </Box>
-                <Box width={20}>
-                  <Text color="cyan">
-                    {result.Driver.code || result.Driver.familyName}
-                  </Text>
-                </Box>
-                <Box width={8}>
-                  <Text>{stylePosition(result.position)}</Text>
-                </Box>
-                <Box width={8}>
-                  <Text>{stylePoints(result.points)}</Text>
-                </Box>
-              </Box>
-            ))
+              );
+            })
           )}
 
           {/* Summary */}

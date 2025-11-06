@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -9,6 +9,13 @@ import { useAppStore } from '../hooks/useAppStore.js';
 import { stylePosition, stylePoints } from '../themes/tokyo-night.js';
 import { formatRaceTime, formatStatus, formatDate } from '../utils/formatters.js';
 import type { Race } from '../types/f1.js';
+import {
+  getDriverNameWidth,
+  getTeamNameWidth,
+  formatDriverName,
+  formatTeamName,
+  getTerminalSizeCategory
+} from '../utils/responsive.js';
 
 export const RaceDetail: React.FC = () => {
   const [race, setRace] = useState<Race | null>(null);
@@ -88,6 +95,24 @@ export const RaceDetail: React.FC = () => {
     );
   }
 
+  // Calculate responsive column widths based on terminal size
+  const { driverWidth, teamWidth, statusWidth, totalWidth } = useMemo(() => {
+    const sizeCategory = getTerminalSizeCategory();
+    const driverW = getDriverNameWidth();
+    const teamW = getTeamNameWidth();
+
+    // Responsive widths
+    const statusW = sizeCategory === 'small' ? 10 : sizeCategory === 'medium' ? 12 : 15;
+    const total = 5 + 1 + driverW + 1 + teamW + 1 + 6 + 1 + statusW + 1 + 7;
+
+    return {
+      driverWidth: driverW,
+      teamWidth: teamW,
+      statusWidth: statusW,
+      totalWidth: total,
+    };
+  }, []);
+
   return (
     <Box flexDirection="column">
       <Header season={f1Client.getCurrentSeason()} />
@@ -119,12 +144,12 @@ export const RaceDetail: React.FC = () => {
                 Pos
               </Text>
             </Box>
-            <Box width={20}>
+            <Box width={driverWidth}>
               <Text color="cyan" bold>
                 Driver
               </Text>
             </Box>
-            <Box width={25}>
+            <Box width={teamWidth}>
               <Text color="cyan" bold>
                 Team
               </Text>
@@ -134,7 +159,7 @@ export const RaceDetail: React.FC = () => {
                 Grid
               </Text>
             </Box>
-            <Box width={15}>
+            <Box width={statusWidth}>
               <Text color="cyan" bold>
                 Time/Status
               </Text>
@@ -149,37 +174,46 @@ export const RaceDetail: React.FC = () => {
           {/* Divider */}
           <Box>
             <Text color="gray" dimColor>
-              {'─'.repeat(78)}
+              {'─'.repeat(totalWidth)}
             </Text>
           </Box>
 
           {/* Results */}
-          {race.Results.map((result) => (
-            <Box key={result.position}>
-              <Box width={5}>
-                <Text>{stylePosition(result.position)}</Text>
+          {race.Results.map((result) => {
+            const displayDriver = formatDriverName(
+              result.Driver.givenName,
+              result.Driver.familyName,
+              result.Driver.code
+            );
+            const displayTeam = formatTeamName(result.Constructor.name, teamWidth);
+            const statusText = result.Time ? formatRaceTime(result.Time.time) : formatStatus(result.status);
+            const truncatedStatus = statusText.length > statusWidth
+              ? statusText.substring(0, statusWidth - 1) + '…'
+              : statusText;
+
+            return (
+              <Box key={result.position}>
+                <Box width={5}>
+                  <Text>{stylePosition(result.position)}</Text>
+                </Box>
+                <Box width={driverWidth}>
+                  <Text color="white">{displayDriver}</Text>
+                </Box>
+                <Box width={teamWidth}>
+                  <Text color="magenta">{displayTeam}</Text>
+                </Box>
+                <Box width={6}>
+                  <Text color="gray">{result.grid}</Text>
+                </Box>
+                <Box width={statusWidth}>
+                  <Text color="gray">{truncatedStatus}</Text>
+                </Box>
+                <Box width={7}>
+                  <Text>{stylePoints(result.points)}</Text>
+                </Box>
               </Box>
-              <Box width={20}>
-                <Text color="white">
-                  {result.Driver.code || result.Driver.familyName}
-                </Text>
-              </Box>
-              <Box width={25}>
-                <Text color="magenta">{result.Constructor.name}</Text>
-              </Box>
-              <Box width={6}>
-                <Text color="gray">{result.grid}</Text>
-              </Box>
-              <Box width={15}>
-                <Text color="gray">
-                  {result.Time ? formatRaceTime(result.Time.time) : formatStatus(result.status)}
-                </Text>
-              </Box>
-              <Box width={7}>
-                <Text>{stylePoints(result.points)}</Text>
-              </Box>
-            </Box>
-          ))}
+            );
+          })}
 
           {/* Footer */}
           <Box marginTop={1}>

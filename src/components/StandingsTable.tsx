@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Text } from 'ink';
 import type { DriverStanding, ConstructorStanding } from '../types/f1.js';
+import {
+  getDriverNameWidth,
+  getTeamNameWidth,
+  formatDriverName,
+  formatTeamName
+} from '../utils/responsive.js';
 
 interface DriverTableProps {
   standings: DriverStanding[];
@@ -34,19 +40,32 @@ const padStart = (str: string | number, length: number): string => {
 };
 
 export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIndex }) => {
+  // Calculate responsive column widths based on terminal size
+  const { driverWidth, teamWidth, totalWidth } = useMemo(() => {
+    const driverW = getDriverNameWidth();
+    const teamW = getTeamNameWidth();
+    const total = 4 + 1 + driverW + 1 + teamW + 1 + 6 + 1 + 6; // pos + spaces + driver + spaces + team + spaces + pts + spaces + wins
+
+    return {
+      driverWidth: driverW,
+      teamWidth: teamW,
+      totalWidth: total,
+    };
+  }, []);
+
   return (
     <Box flexDirection="column">
       {/* Header */}
       <Box>
         <Text color="cyan" bold>
-          {padEnd('Pos', 4)} {padEnd('Driver', 20)} {padEnd('Team', 25)} {padStart('Pts', 6)} {padStart('Wins', 6)}
+          {padEnd('Pos', 4)} {padEnd('Driver', driverWidth)} {padEnd('Team', teamWidth)} {padStart('Pts', 6)} {padStart('Wins', 6)}
         </Text>
       </Box>
 
       {/* Divider */}
       <Box>
         <Text color="gray" dimColor>
-          {'─'.repeat(65)}
+          {'─'.repeat(totalWidth)}
         </Text>
       </Box>
 
@@ -54,25 +73,38 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
       {standings.map((standing, index) => {
         const isSelected = index === selectedIndex;
         const position = standing.position;
-        const driverCode = standing.Driver.code || standing.Driver.familyName.substring(0, 3).toUpperCase();
-        const driverName = `${standing.Driver.givenName} ${standing.Driver.familyName}`;
-        const displayDriver = driverCode.length <= 3 ? driverCode : driverName.substring(0, 18);
+
+        // Format driver name responsively
+        const displayDriver = formatDriverName(
+          standing.Driver.givenName,
+          standing.Driver.familyName,
+          standing.Driver.code
+        );
+
+        // Format team name responsively
         const teamName = standing.Constructors[0]?.name || 'N/A';
-        const displayTeam = teamName.length > 23 ? teamName.substring(0, 23) : teamName;
+        const displayTeam = formatTeamName(teamName, teamWidth);
+
         const points = standing.points;
         const wins = standing.wins;
+
+        // Improved color scheme with better visibility
+        const positionColor = position === '1' ? 'yellow' :
+                             position === '2' ? 'white' :
+                             position === '3' ? '#ff9e64' :
+                             'white';
 
         return (
           <Box key={standing.Driver.driverId}>
             <Text>
-              <Text color={position === '1' ? 'yellow' : position === '2' ? 'gray' : position === '3' ? '#cd7f32' : 'white'} bold={parseInt(position) <= 3}>
+              <Text color={positionColor} bold={parseInt(position) <= 3}>
                 {padEnd(position, 4)}
               </Text>
               <Text color="cyan">
-                {padEnd(displayDriver, 20)}
+                {padEnd(displayDriver, driverWidth)}
               </Text>
               <Text color="magenta">
-                {padEnd(displayTeam, 25)}
+                {padEnd(displayTeam, teamWidth)}
               </Text>
               <Text color="green" bold>
                 {padStart(points, 6)}
@@ -101,19 +133,30 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
 DriverTable.displayName = 'DriverTable';
 
 export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, selectedIndex }) => {
+  // Calculate responsive column widths based on terminal size
+  const { teamWidth, totalWidth } = useMemo(() => {
+    const teamW = getTeamNameWidth();
+    const total = 4 + 1 + teamW + 1 + 6 + 1 + 6; // pos + spaces + team + spaces + pts + spaces + wins
+
+    return {
+      teamWidth: teamW,
+      totalWidth: total,
+    };
+  }, []);
+
   return (
     <Box flexDirection="column">
       {/* Header */}
       <Box>
         <Text color="magenta" bold>
-          {padEnd('Pos', 4)} {padEnd('Constructor', 35)} {padStart('Pts', 6)} {padStart('Wins', 6)}
+          {padEnd('Pos', 4)} {padEnd('Constructor', teamWidth)} {padStart('Pts', 6)} {padStart('Wins', 6)}
         </Text>
       </Box>
 
       {/* Divider */}
       <Box>
         <Text color="gray" dimColor>
-          {'─'.repeat(55)}
+          {'─'.repeat(totalWidth)}
         </Text>
       </Box>
 
@@ -121,19 +164,28 @@ export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, 
       {standings.map((standing, index) => {
         const isSelected = index === selectedIndex;
         const position = standing.position;
+
+        // Format team name responsively
         const teamName = standing.Constructor.name;
-        const displayTeam = teamName.length > 33 ? teamName.substring(0, 33) : teamName;
+        const displayTeam = formatTeamName(teamName, teamWidth);
+
         const points = standing.points;
         const wins = standing.wins;
+
+        // Improved color scheme with better visibility
+        const positionColor = position === '1' ? 'yellow' :
+                             position === '2' ? 'white' :
+                             position === '3' ? '#ff9e64' :
+                             'white';
 
         return (
           <Box key={standing.Constructor.constructorId}>
             <Text>
-              <Text color={position === '1' ? 'yellow' : position === '2' ? 'gray' : position === '3' ? '#cd7f32' : 'white'} bold={parseInt(position) <= 3}>
+              <Text color={positionColor} bold={parseInt(position) <= 3}>
                 {padEnd(position, 4)}
               </Text>
               <Text color="magenta" bold>
-                {padEnd(displayTeam, 35)}
+                {padEnd(displayTeam, teamWidth)}
               </Text>
               <Text color="green" bold>
                 {padStart(points, 6)}

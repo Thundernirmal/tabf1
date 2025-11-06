@@ -4,22 +4,22 @@ import chalk from 'chalk';
 
 export const theme = {
   // Primary colors
-  primary: '#7dcfff', // Cyan
-  secondary: '#bb9af7', // Purple
-  success: '#9ece6a', // Green
-  warning: '#e0af68', // Yellow
-  error: '#f7768e', // Red
-  info: '#7aa2f7', // Blue
+  primary: '#7dcfff', // Cyan - bright, high visibility
+  secondary: '#bb9af7', // Purple - bright, high visibility
+  success: '#9ece6a', // Green - bright, high visibility
+  warning: '#e0af68', // Yellow - bright, high visibility
+  error: '#f7768e', // Red - bright, high visibility
+  info: '#7aa2f7', // Blue - bright, high visibility
 
-  // Podium colors
-  gold: '#ffd700',
-  silver: '#c0c0c0',
-  bronze: '#ff9e64',
+  // Podium colors - enhanced for better visibility
+  gold: '#ffd700',      // Gold for 1st place
+  silver: '#e8e8e8',    // Brighter silver for 2nd place
+  bronze: '#ff9e64',    // Bronze for 3rd place
 
-  // Text colors
-  text: '#c0caf5',
-  textMuted: '#9aa5ce',
-  textDim: '#565f89',
+  // Text colors - improved contrast
+  text: '#e8e8e8',      // Brighter white for better readability
+  textMuted: '#a9b1d6', // Slightly brighter for secondary text
+  textDim: '#787c99',   // Brighter dim text for better visibility
 
   // Background colors
   bg: '#1a1b26',
