@@ -157,7 +157,7 @@ export const Dashboard: React.FC = () => {
         >
           <Box justifyContent="center" marginBottom={1}>
             <Text color="cyan" bold>
-              🏎️  DRIVER STANDINGS
+              DRIVER STANDINGS
             </Text>
           </Box>
           <DriverTable standings={driverStandings} selectedIndex={selectedDriverIndex} />
@@ -174,7 +174,7 @@ export const Dashboard: React.FC = () => {
         >
           <Box justifyContent="center" marginBottom={1}>
             <Text color="magenta" bold>
-              🏁  CONSTRUCTOR STANDINGS
+              CONSTRUCTOR STANDINGS
             </Text>
           </Box>
           <ConstructorTable

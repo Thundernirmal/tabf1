@@ -19,7 +19,7 @@ export const Loading = React.memo<LoadingProps>(({ message = 'Loading...' }) => 
         </Text>
       </Box>
       <Text color="gray" dimColor>
-        🏎️💨
+        Loading data...
       </Text>
     </Box>
   );

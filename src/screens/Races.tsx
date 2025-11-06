@@ -108,7 +108,7 @@ export const Races: React.FC = () => {
       >
         <Box justifyContent="center" marginBottom={1}>
           <Text color="cyan" bold>
-            🏁  RACE CALENDAR & RESULTS
+            RACE CALENDAR & RESULTS
           </Text>
         </Box>
         <RaceList races={races} selectedIndex={selectedIndex} />

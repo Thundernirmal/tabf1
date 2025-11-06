@@ -83,7 +83,7 @@ export const ConstructorDetail: React.FC = () => {
       >
         <Box justifyContent="center" marginBottom={1}>
           <Text color="magenta" bold>
-            🏁  CONSTRUCTOR PERFORMANCE - LAST {results.length} RACES
+            CONSTRUCTOR PERFORMANCE - LAST {results.length} RACES
           </Text>
         </Box>
 

@@ -26,17 +26,17 @@ export function formatStatus(status: string): string {
 
   // Shortened common statuses
   const statusMap: Record<string, string> = {
-    'Collision': '💥 Crash',
-    'Accident': '💥 Crash',
-    'Spun off': '🌀 Spin',
-    'Retired': '❌ DNF',
-    'Engine': '🔧 Engine',
-    'Gearbox': '⚙️ Gearbox',
-    'Transmission': '⚙️ Trans',
-    'Brakes': '🛑 Brakes',
-    'Electrical': '⚡ Electrical',
-    'Hydraulics': '💧 Hydraulics',
-    'Disqualified': '🚫 DSQ',
+    'Collision': 'Crash',
+    'Accident': 'Crash',
+    'Spun off': 'Spin',
+    'Retired': 'DNF',
+    'Engine': 'Engine',
+    'Gearbox': 'Gearbox',
+    'Transmission': 'Trans',
+    'Brakes': 'Brakes',
+    'Electrical': 'Electrical',
+    'Hydraulics': 'Hydraulics',
+    'Disqualified': 'DSQ',
   };
 
   for (const [key, value] of Object.entries(statusMap)) {

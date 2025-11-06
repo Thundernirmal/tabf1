@@ -17,7 +17,7 @@ export const Header = React.memo<HeaderProps>(({ season }) => {
       >
         <Text>
           <Text color="cyan" bold>
-            🏎️  TabF1 - F1 Dashboard  🏁
+            TabF1 - F1 Dashboard
           </Text>
         </Text>
       </Box>

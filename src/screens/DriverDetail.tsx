@@ -84,7 +84,7 @@ export const DriverDetail: React.FC = () => {
       >
         <Box justifyContent="center" marginBottom={1}>
           <Text color="cyan" bold>
-            🏎️  DRIVER PERFORMANCE - LAST {results.length} RACES
+            DRIVER PERFORMANCE - LAST {results.length} RACES
           </Text>
         </Box>
 

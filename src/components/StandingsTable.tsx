@@ -39,7 +39,7 @@ export const DriverTable = React.memo<DriverTableProps>(({ standings, selectedIn
       {/* Header */}
       <Box>
         <Text color="cyan" bold>
-          {'Pos'.padEnd(4)} {'Driver'.padEnd(20)} {'Team'.padEnd(25)} {'Pts'.padStart(6)} {'Wins'.padStart(6)}
+          {padEnd('Pos', 4)} {padEnd('Driver', 20)} {padEnd('Team', 25)} {padStart('Pts', 6)} {padStart('Wins', 6)}
         </Text>
       </Box>
 
@@ -106,7 +106,7 @@ export const ConstructorTable = React.memo<ConstructorTableProps>(({ standings, 
       {/* Header */}
       <Box>
         <Text color="magenta" bold>
-          {'Pos'.padEnd(4)} {'Constructor'.padEnd(35)} {'Pts'.padStart(6)} {'Wins'.padStart(6)}
+          {padEnd('Pos', 4)} {padEnd('Constructor', 35)} {padStart('Pts', 6)} {padStart('Wins', 6)}
         </Text>
       </Box>
 

@@ -102,7 +102,7 @@ export const RaceDetail: React.FC = () => {
       >
         <Box justifyContent="center" marginBottom={0}>
           <Text color="cyan" bold>
-            🏁  {race.raceName.toUpperCase()}
+            {race.raceName.toUpperCase()}
           </Text>
         </Box>
         <Box justifyContent="center" marginBottom={1}>
