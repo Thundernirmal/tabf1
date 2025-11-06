@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -17,7 +17,7 @@ export const DriverDetail: React.FC = () => {
 
   const { selectedDriverId, goBack } = useAppStore();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!selectedDriverId) {
       goBack();
       return;
@@ -34,11 +34,11 @@ export const DriverDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedDriverId, goBack]);
 
   useEffect(() => {
     loadData();
-  }, [selectedDriverId]);
+  }, [loadData]);
 
   useInput((input, key) => {
     if (key.escape || input === 'q') {

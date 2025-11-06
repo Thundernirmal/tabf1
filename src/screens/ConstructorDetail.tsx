@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -16,7 +16,7 @@ export const ConstructorDetail: React.FC = () => {
 
   const { selectedConstructorId, goBack } = useAppStore();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!selectedConstructorId) {
       goBack();
       return;
@@ -33,11 +33,11 @@ export const ConstructorDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedConstructorId, goBack]);
 
   useEffect(() => {
     loadData();
-  }, [selectedConstructorId]);
+  }, [loadData]);
 
   useInput((input, key) => {
     if (key.escape || input === 'q') {

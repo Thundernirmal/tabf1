@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { KeyBindings } from '../components/KeyBindings.js';
@@ -17,7 +17,7 @@ export const RaceDetail: React.FC = () => {
 
   const { selectedRaceSeason, selectedRaceRound, goBack } = useAppStore();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!selectedRaceSeason || !selectedRaceRound) {
       goBack();
       return;
@@ -34,11 +34,11 @@ export const RaceDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedRaceSeason, selectedRaceRound, goBack]);
 
   useEffect(() => {
     loadData();
-  }, [selectedRaceSeason, selectedRaceRound]);
+  }, [loadData]);
 
   useInput((input, key) => {
     if (key.escape || input === 'q') {
